@@ -1,0 +1,141 @@
+clear; close all; clc;
+
+run('Simulation.m')
+
+run('startup.m')
+import casadi.*
+
+opti = casadi.Opti();
+
+% T = MX.sym('T', 1); % seconds
+T = 1; % seconds
+N = 20*T; % nb colloc nodes
+
+dN = T/N;
+
+x = opti.variable(2*model.NB,N);% state (q1,q2,qd1,qd2)
+u = opti.variable(model.NB,N);% control (u)
+
+J = 0; % initialization
+
+% opti.set_initial(x,zeros(2*model.NB,N))
+opti.set_initial(u,ones(model.NB,N)/1000)
+opti.subject_to(x(:,1)==zeros(2*model.NB,1));% initial constraint
+% opti.subject_to(x(10,1)==1);% initial constraint
+% opti.subject_to(x(12,1)==9.81/2);% initial constraint
+opti.subject_to(u(:,1)==zeros(model.NB,1));% initial constraint
+
+% final_position = [dyn(1000,:,1).';dyn(1000,:,2).'];
+% opti.subject_to(x(:,end)==final_position);% terminal constraint on position
+
+% opti.subject_to(abs(x(1,:))<5);% constraint on position
+
+% Trapezoidal Collocation
+% q = x(1:model.NB,:);
+% qd = x(model.NB+1:end,:);
+% tau = u;
+f_ext = {};
+fx = [];
+
+temp_markers = size(model.markers.coordinates);
+N_cardinal_coor = temp_markers(1);
+N_markers = temp_markers(2);
+Estimated_PosMarkers = cell(N, N_cardinal_coor, N_markers);
+
+for n = 1:N-1
+    qdd = FDab( model, x(1:model.NB,n), x(model.NB+1:end,n), u(:,n), f_ext );
+    fx = [x(model.NB+1:end,n);qdd];
+    
+    qdd = FDab( model,x(1:model.NB,n+1) , x(model.NB+1:end,n+1), u(:,n+1), f_ext );
+    fx1 = [x(model.NB+1:end,n+1);qdd];
+    
+    xkend = x(:,n) + 1/2.*dN*(fx1+fx);
+
+    opti.subject_to(xkend - x(:,n+1) == 0);
+%     opti.subject_to(1/2.*dN*(fx1+fx) == x(:,n+1) - x(:,n));
+end
+
+for n = 1:N
+    Estimated_PosMarkers(n,:,:) = base_referential_coor(model, x(1:model.NB,n));
+    
+    for m = 1:N_markers
+        distance_between_points = 0;
+        for l = 1:N_cardinal_coor
+            distance_between_points = distance_between_points + (GaussianNoise_PosMarkers{ceil(n/N*nb_dt),l,m} - Estimated_PosMarkers{n,l,m}).^2;
+        end
+%         distance_between_points = sqrt(distance_between_points);
+        J = J + 1/2 * distance_between_points;
+    end
+end
+
+opti.minimize(J);% minimize objective function
+
+opti.solver('ipopt');
+sol = opti.solve();
+solx = sol.value(x);
+solu = sol.value(u);
+% plot(solx(1,:))
+% figure()
+% plot(solx(3,:))
+% figure()
+% plot(solu)
+
+% t_opti = linspace(dN,T,N);
+% t_simu = linspace(dt,T,nb_dt);
+% figure()
+% hold on
+% plot(t_opti,solx(1:3,:),'x');
+% plot(t_simu,dyn(:,1:3,1),'x');
+% hold off
+% figure()
+% hold on
+% plot(t_opti,solx(4:6,:),'x');
+% plot(t_simu,dyn(:,4:6,1),'x');
+% hold off
+% figure()
+% hold on
+% plot(t_opti,solx(7:9,:),'x');
+% plot(t_simu,dyn(:,7:9,1),'x');
+% hold off
+
+t_opti = linspace(dN,T,N);
+t_simu = linspace(dt,T,nb_dt);
+
+figure()
+hold on
+plot(t_opti,solx(1:3,:),'o');
+plot(t_simu,gaussian_noise_dyn(:,1:3),'x');
+hold off
+title('translation root')
+
+figure()
+hold on
+plot(t_opti,solx(4:6,:),'o');
+plot(t_simu,gaussian_noise_dyn(:,4:6),'x');
+hold off
+title('rotation root')
+
+
+figure()
+hold on
+plot(t_opti,solx(7:9,:),'o');
+plot(t_simu,gaussian_noise_dyn(:,7:9),'x');
+hold off
+title('Arm root')
+
+figure()
+hold on
+plot(t_opti,solu(1:3,:),'o');
+hold off
+
+figure()
+hold on
+plot(t_opti,solu(4:6,:),'o');
+hold off
+
+
+figure()
+hold on
+plot(t_opti,solu(7:9,:),'o');
+hold off
+% showmotion(model, dN:dN:T, solx(1:9,:))
