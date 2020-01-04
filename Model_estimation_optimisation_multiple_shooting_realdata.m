@@ -1,19 +1,18 @@
-% Script to optimize a trajectory with 9 DoF, 1sec time frame
+﻿% Script to optimize a trajectory with 42 DoF, 1sec time frame
 % models with trapezoidal collocation
 clear, clc, close all
 run('startup.m')
 import casadi.*
 
-nDoF = '9';
+nDoF = '42';
 
 data.Duration = 1; % Time horizon
 data.Nint = 21;% number of control nodes
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
-data.source = 'simulation'
+data.source = 'real'
 
-data.simNint = data.Nint;% number of control nodes
-data.simVariance = 0.01;
+data.dataFile = 'Do_822_contact_2_MOD200.00_GenderF_DoCig_Q.mat';
 
 data.weightU = 0.01;
 data.weightPoints = 1;
@@ -21,7 +20,7 @@ data.weightPoints = 1;
 disp('Generating Model')
 [model, data] = GenerateModel(data);
 disp('Generating Simulation')
-[model, data] = GenerateSimulation_RK4(model,data);
+[model, data] = GenerateRealData(model,data);
 disp('Calculating Estimation')
 [prob, lbw, ubw, lbg, ubg] = GenerateEstimation_multiple_shooting(model, data);
 
@@ -36,10 +35,8 @@ solver = nlpsol('solver', 'ipopt', prob, options);
 
 w0=[];
 for k=1:data.Nint
-    w0 = [w0;  data.x(:,k)];
-    w0 = [w0;  data.u(:,k)];
-%     w0 = [w0;  data.x0];
-%     w0 = [w0;  data.u0];
+    w0 = [w0;  data.x0];
+    w0 = [w0;  data.u0];
 end
 
 sol = solver('x0', w0, 'lbx', lbw, 'ubx', ubw, 'lbg', lbg, 'ubg', ubg);
@@ -57,6 +54,6 @@ for i=1:model.nu
     u_opt(i,:) = w_opt(i+model.nx:model.nx+model.nu:end)';
 end
 
-GeneratePlots(model, data, q_opt, v_opt, u_opt);
+GeneratePlots_realdata(model, data, q_opt, v_opt, u_opt);
 
 % showmotion(model, 0:data.Duration/(data.Nint-1):data.Duration, q_opt(:,:))

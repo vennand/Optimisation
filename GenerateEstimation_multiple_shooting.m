@@ -6,9 +6,7 @@ Nint = data.Nint; % nb colloc nodes
 
 dN = T/Nint;
 
-temp_markers = size(model.markers.coordinates);
-N_cardinal_coor = temp_markers(1);
-N_markers = temp_markers(2);
+[N_cardinal_coor, N_markers] = size(model.markers.coordinates);
 
 tau_base = SX.zeros(6,1);
 forDyn = @(x,u)[  x(model.idx_v)
@@ -23,7 +21,7 @@ S = @(u)0.05* (u'*u);
 f = Function('f', {x, u}, {forDyn(x,u)});
 fJ = Function('fJ', {x, u, markers}, {S(u) + objective_func(model,markers,L(x))});
 
-markers = data.gaussianNoiseMarkers;
+markers = data.markers;
 
 % Start with an empty NLP
 w={};
