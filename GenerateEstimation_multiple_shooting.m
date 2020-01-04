@@ -17,16 +17,8 @@ x = SX.sym('x', model.nx,1);
 u = SX.sym('u', model.nu,1);
 markers = SX.sym('markers', N_cardinal_coor * N_markers);
 
-switch data.obj
-    case 'twist', L = 0.5* (u'*u);
-    case 'twistPond'
-        if strcmpi(model.name, '10'), L = 10*(u([1 3])'*u([1 3]))+0.01*(u([2 4])'*u([2 4]));
-        else, L = 0.01*(u'*u);
-        end
-    case 'torque', L = 0.5* (u'*u);
-    case 'trajectory_estimation', L = @(x)base_referential_coor(model, x(1:model.NB)); % Estimated marker positions, not objective function
-end
-S = @(u)0.01* (u'*u);
+L = @(x)base_referential_coor(model, x(1:model.NB)); % Estimated marker positions, not objective function
+S = @(u)0.05* (u'*u);
 
 f = Function('f', {x, u}, {forDyn(x,u)});
 fJ = Function('fJ', {x, u, markers}, {S(u) + objective_func(model,markers,L(x))});

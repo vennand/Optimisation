@@ -24,7 +24,7 @@ u = zeros(model.nu,1);
 
 % Initial velocities
 x(N+1) = 1;
-x(N+3) = 9.81;
+x(N+3) = 9.81/2;
 % x(N+4) = 0;
 % x(N+7) = 2;
 % x(N+8) = 2;
@@ -32,9 +32,7 @@ x(N+3) = 9.81;
 
 % u(1) = 0.2;
 
-N_markers = size(model.markers.coordinates);
-N_cardinal_coor = N_markers(1);
-N_markers = N_markers(2);
+[N_cardinal_coor, N_markers] = size(model.markers.coordinates);
 PosMarkers = zeros(simNint, N_cardinal_coor * N_markers);
 
 Xi = zeros(model.nx,simNint);
@@ -54,25 +52,19 @@ for i = 2:simNint
     x = full(x);
     Xi(:,i) = x;
     
-    
 %     if i == floor(simNint/8-1)
 %         u(4) = -0.2;
-%     end
-    if i == floor(simNint*3/8-1)
-        u(1) = 0.2;
-    end
-%     if i == floor(simNint*4/8-1)
+%     elseif i == floor(simNint*3/8-1)
+%         u(1) = 0.2;
+%     elseif i == floor(simNint*4/8-1)
 %         u(4) = 0.2;
-%     end
-    if i == floor(simNint*5/8-1)
-        u(1) = -0.2;
-    end
-%     if i == floor(simNint*6/8-1)
+%     elseif i == floor(simNint*5/8-1)
+%         u(1) = -0.2;
+%     elseif i == floor(simNint*6/8-1)
 %         u(4) = -0.2;
+%     elseif i == floor(simNint*7/8-1)
+%         u(1) = 0.2;
 %     end
-    if i == floor(simNint*7/8-1)
-        u(1) = 0.2;
-    end
     
     Ui(:,i) = u;
     
@@ -85,7 +77,7 @@ GaussianNoise_x = Xi + sqrt(variance).*(2.*rand(model.nx,simNint)-1);
 
 GaussianNoise_PosMarkers = zeros(simNint, N_cardinal_coor * N_markers);
 for i = 1:simNint
-    GaussianNoise_PosMarkers(i,:) = base_referential_coor(model,GaussianNoise_x(:,i)) ;
+    GaussianNoise_PosMarkers(i,:) = base_referential_coor(model,GaussianNoise_x(:,i));
 end
 
 % Storing data

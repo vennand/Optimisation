@@ -4,14 +4,18 @@ function PosMarkers = base_referential_coor(model, q)
     import casadi.*
     
     N = model.NB;
-
-%     Xa = cell(N,1);
-%     TransMatrix = cell(N,1);
+    
+    isSX = false;
+    for i = 1:N
+        if class(model.Xtree{i}) == "casadi.SX"
+            isSX = true;
+        end
+    end
 
     isMX = false;
 
     N_markers = size(model.markers.coordinates);
-    if class(q) == "casadi.SX"
+    if class(q) == "casadi.SX" || isSX
         PosMarkers = SX.sym('marker', N_markers(1) * N_markers(2), 1);
     elseif class(q) == "casadi.MX"
         PosMarkers = {};
