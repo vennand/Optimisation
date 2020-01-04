@@ -1,10 +1,10 @@
-% Script to optimize a trajectory with 9 DoF, 1sec time frame
-% models with trapezoidal collocation
+% Script to optimize a trajectory with 9 or 12 DoF, 1sec time frame
+% models with multiple shooting
 clear, clc, close all
 run('startup.m')
 import casadi.*
 
-nDoF = '12';
+nDoF = '9';
 
 data.Duration = 1; % Time horizon
 data.Nint = 21;% number of control nodes
@@ -22,11 +22,11 @@ data.simVariance = 0.01;
 [lbw, ubw] = GenerateInitialConstraints(model, data, lbw, ubw);
 
 options = struct;
-% options.ipopt.max_iter = 3000;
-% options.ipopt.print_level = 5;
+options.ipopt.max_iter = 3000;
+options.ipopt.print_level = 5;
 
-solver = nlpsol('solver', 'snopt', prob, options); % FAIRE MARCHER ÇA
-% solver = nlpsol('solver', 'ipopt', prob, options);
+% solver = nlpsol('solver', 'snopt', prob, options); % FAIRE MARCHER ÇA
+solver = nlpsol('solver', 'ipopt', prob, options);
 
 w0=[];
 for k=1:data.Nint

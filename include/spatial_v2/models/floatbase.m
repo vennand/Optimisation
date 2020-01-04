@@ -31,9 +31,9 @@ if isfield( model, 'gamma_q' )
   warning('floating a model with gamma_q (joint numbers will change)');
 end
 
-if ~isequal( model.Xtree{1}, eye(6) )
-  warning('Xtree{1} not identity');
-end
+% if ~isequal( model.Xtree{1}, eye(6) )
+%   warning('Xtree{1} not identity');
+% end
 
 fbmodel = model;
 
