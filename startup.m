@@ -19,8 +19,7 @@
 %     below to that file.
 
 % disable Alt shortcuts
-% com.mathworks.desktop.mnemonics.MnemonicsManagers.get.disable
+com.mathworks.desktop.mnemonics.MnemonicsManagers.get.disable
 
-addpath( genpath('casadi-linux-matlabR2014b-v3.4.5') );
-addpath( genpath('spatial_v2') );
-% addpath( genpath( '/home/andre/Somersault' ) );
+addpath( genpath('include/casadi-linux-matlabR2014b-v3.4.5') );
+addpath( genpath('include/spatial_v2') );

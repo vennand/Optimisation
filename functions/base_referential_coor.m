@@ -1,14 +1,26 @@
 % From the coordinates of a point in a segment referential, finds the coordinates in the base referential
 
 function PosMarkers = base_referential_coor(model, q)
-
+    import casadi.*
+    
     N = model.NB;
 
-    Xa = cell(N,1);
-    TransMatrix = cell(N,1);
+%     Xa = cell(N,1);
+%     TransMatrix = cell(N,1);
+
+    isMX = false;
 
     N_markers = size(model.markers.coordinates);
-    PosMarkers = cell(N_markers(1), N_markers(2));
+    if class(q) == "casadi.SX"
+        PosMarkers = SX.sym('marker', N_markers(1) * N_markers(2), 1);
+    elseif class(q) == "casadi.MX"
+        PosMarkers = {};
+        isMX = true;
+    elseif class(q) == "casadi.DM"
+        PosMarkers = DM(N_markers(1) * N_markers(2), 1);
+    else
+        PosMarkers = zeros(N_markers(1) * N_markers(2), 1);
+    end
     
     % Get the rotational matrix to change from a segment referential to the
     % base referential
@@ -22,12 +34,16 @@ function PosMarkers = base_referential_coor(model, q)
         TransMatrix{j} = inv(Transform);		% displacement is inverse of coord xform
     end
 
+    n = 0;
     for k = 1:N_markers(2)
-        if model.markers.parent(k) == 6
-            trackpos = [model.markers.coordinates(:,k)' 1] * TransMatrix{6}'; % Check for floating base?
-        elseif model.markers.parent(k) == 9
-            trackpos = [model.markers.coordinates(:,k)' 1] * TransMatrix{9}'; % Modify/improve this!
+        trackpos = [model.markers.coordinates(:,k)' 1] * TransMatrix{model.markers.parent(k)}'; % Check for floating base?
+        for m = 1:N_markers(1)
+            n = n + 1;
+            if isMX
+                PosMarkers = {PosMarkers{:} trackpos(m)};
+            else
+                PosMarkers(n) = trackpos(m);
+            end
         end
-        PosMarkers(:,k) = num2cell(trackpos(1:3));
     end
 end
