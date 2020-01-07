@@ -1,4 +1,4 @@
-﻿% Script to optimize a trajectory with 42 DoF, 1sec time frame
+% Script to optimize a trajectory with 42 DoF, 1sec time frame
 % models with trapezoidal collocation
 clear, clc, close all
 run('startup.m')
@@ -10,7 +10,6 @@ data.Duration = 1; % Time horizon
 data.Nint = 21;% number of control nodes
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
-data.source = 'real'
 
 data.dataFile = 'Do_822_contact_2_MOD200.00_GenderF_DoCig_Q.mat';
 

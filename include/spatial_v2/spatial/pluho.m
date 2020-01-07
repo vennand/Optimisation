@@ -21,5 +21,5 @@ if all(size(in)==[6 6])			% Plucker -> 4x4 homogeneous
 else					% 4x4 homogeneous -> Plucker
   E = in(1:3,1:3);
   mEr = in(1:3,4);			% - E r
-  out = [ E, zeros(3); skew(mEr)*E, E ];
+  out = [ E, zeros(3); skew1(mEr)*E, E ];
 end

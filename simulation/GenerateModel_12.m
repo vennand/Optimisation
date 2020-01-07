@@ -1,5 +1,5 @@
 % Only works with nDoF = 12
-function [model, data] = GenerateModel_12(nDoF,data)
+function [model, data] = GenerateModel_12(data)
 import casadi.*
 
 nDoF = '12';

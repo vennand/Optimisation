@@ -21,8 +21,10 @@
 % disable Alt shortcuts
 com.mathworks.desktop.mnemonics.MnemonicsManagers.get.disable
 
-addpath( genpath('include/casadi-linux-matlabR2014b-v3.4.5') );
-addpath( genpath('include/spatial_v2') );
+addpath( genpath('../include/casadi-linux-matlabR2014b-v3.4.5') );
+addpath( genpath('../include/spatial_v2') );
 
-addpath( genpath('include/SNOPT/linux') );
-setenv('SNOPT_LICENSE','include/SNOPT/linux/snopt7.lic')
+addpath( genpath('../functions') );
+
+addpath( genpath('../include/SNOPT/linux') );
+setenv('SNOPT_LICENSE','../include/SNOPT/linux/snopt7.lic')
