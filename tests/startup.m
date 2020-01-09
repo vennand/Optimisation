@@ -23,6 +23,8 @@ com.mathworks.desktop.mnemonics.MnemonicsManagers.get.disable
 
 addpath( genpath('../include/casadi-linux-matlabR2014b-v3.4.5') );
 addpath( genpath('../include/spatial_v2') );
+addpath( genpath('../../Matlab_toolbox/biorbd_matlab') );
+addpath( genpath('../../Matlab_toolbox/ezc3d_matlab') );
 
 addpath( genpath('../functions') );
 

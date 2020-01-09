@@ -4,7 +4,7 @@ clear, clc, close all
 run('startup.m')
 import casadi.*
 
-nDoF = '42';
+nDoF = '9';
 
 data.Duration = 1; % Time horizon
 data.Nint = 21;% number of control nodes
@@ -18,7 +18,7 @@ data.weightU = 0.01;
 data.weightPoints = 1;
 
 disp('Generating Model')
-[model, data] = GenerateModel_9(data);
+[model, data] = GenerateModel(data);
 disp('Generating Simulation')
 [model, data] = GenerateSimulation_RK4(model,data);
 disp('Calculating Estimation')
@@ -56,7 +56,7 @@ for i=1:model.nu
     u_opt(i,:) = w_opt(i+model.nx:model.nx+model.nu:end)';
 end
 
-GeneratePlots(model, data, q_opt, v_opt, u_opt);
+% GeneratePlots(model, data, q_opt, v_opt, u_opt);
 
 % showmotion(model, 0:data.Duration/(data.Nint-1):data.Duration, q_opt(:,:))
 % showmotion(model, 0:data.Duration/(data.Nint-1):data.Duration, data.xFull(1:model.nq,:))

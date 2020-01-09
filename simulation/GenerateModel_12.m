@@ -10,7 +10,7 @@ model.NB = str2double(nDoF)-5; % model.floatbase will add 5 degrees of freedom
 model.parent = [0 1 2 3 1 5 6];
 model.jtype = {'R', 'Rx', 'Ry', 'Rz', 'Rx', 'Ry', 'Rz'};
 
-model.Xtree = { eye(6), pluho([0 1 0 0;-1 0 0 1;0 0 1 0;0 0 0 1]), eye(6), eye(6), pluho([0 1 0 0;-1 0 0 0;0 0 1 0;0 0 0 1]), eye(6), eye(6) };
+model.Xtree = { eye(6), inv(pluho([0 -1 0 1;1 0 0 0;0 0 1 0;0 0 0 1])), eye(6), eye(6), inv(pluho([0 -1 0 0;1 0 0 0;0 0 1 0;0 0 0 1])), eye(6), eye(6) };
 
 rod1 = mcI( 1, [0.5,0,0], diag([0.01,1,1]) );
 rod2 = mcI( 1, [0.5,0,0], diag([0.01,1,1]) );
@@ -18,7 +18,7 @@ rod3 = mcI( 1, [0.5,0,0], diag([0.01,1,1]) );
 model.I = { rod1, zeros(6,6), zeros(6,6), rod2, zeros(6,6), zeros(6,6), rod3  };
 
 model.markers.name = {'A','B','C','D','E','F','G','H','I'};
-model.markers.parent = [6 6 6 9 9 9 12 12 12 ]; % Yeah??
+model.markers.parent = [6 6 6 9 9 9 12 12 12 ];
 model.markers.coordinates = [1/4 0.05 0;2/4 0 -0.05;3/4 -0.05 0.05;...
                              1/4 0.05 0;2/4 0 -0.05;3/4 -0.05 0.05;...
                              1/4 0.05 0;2/4 0 -0.05;3/4 -0.05 0.05]';

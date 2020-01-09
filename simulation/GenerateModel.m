@@ -85,5 +85,5 @@ model.xmax = [xmax_base';  inf*ones(model.nq-6,1); xmax_base';  100*ones(model.n
 model.umin = -50*ones(model.nu,1);
 model.umax =  50*ones(model.nu,1);
 
-% model.gravity = [0 0 0];
+model.gravity = [0 0 0];
 end

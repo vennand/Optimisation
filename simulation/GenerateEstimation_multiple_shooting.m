@@ -1,4 +1,4 @@
-function [prob, lbw, ubw, lbg, ubg] = GenerateEstimation_multiple_shooting(model, data, variables, constraints)
+function [prob, lbw, ubw, lbg, ubg] = GenerateEstimation_multiple_shooting(model, data)
 import casadi.*
 
 T = data.Duration; % secondes

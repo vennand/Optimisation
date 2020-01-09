@@ -6,24 +6,34 @@ import casadi.*
 
 nDoF = '42';
 
-data.Duration = 1; % Time horizon
-data.Nint = 21;% number of control nodes
+% data.Duration = 1; % Time horizon
+data.Nint = 121;% number of control nodes
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
-data.dataFile = 'Do_822_contact_2_MOD200.00_GenderF_DoCig_Q.mat';
+data.dataFile = 'Do_822_contact_2.c3d';
+data.kalmanDataFile = 'Do_822_contact_2_MOD200.00_GenderF_DoCig_Q.mat';
 
-data.weightU = 0.01;
+% Spécific à Do_822_contact_2.c3d
+% Le saut est entre les frames 3050 et 3385
+data.frames = 3050:3386;
+data.labels = 1:95;
+
+data.realNint = length(frames);
+
+data.weightU = 0.05;
 data.weightPoints = 1;
 
 disp('Generating Model')
 [model, data] = GenerateModel(data);
-disp('Generating Simulation')
+disp('Generating Kalman Filter')
+[model, data] = GenerateKalmanFilter(model,data);
+disp('Generating Real Data')
 [model, data] = GenerateRealData(model,data);
 disp('Calculating Estimation')
 [prob, lbw, ubw, lbg, ubg] = GenerateEstimation_multiple_shooting(model, data);
 
-[lbw, ubw] = GenerateInitialConstraints(model, data, lbw, ubw);
+% [lbw, ubw] = GenerateInitialConstraints(model, data, lbw, ubw);
 
 options = struct;
 options.ipopt.max_iter = 3000;
@@ -34,7 +44,8 @@ solver = nlpsol('solver', 'ipopt', prob, options);
 
 w0=[];
 for k=1:data.Nint
-    w0 = [w0;  data.x0];
+%     w0 = [w0;  data.x0];
+    w0 = [w0;  data.kalman_q(:,k)];
     w0 = [w0;  data.u0];
 end
 
@@ -53,6 +64,6 @@ for i=1:model.nu
     u_opt(i,:) = w_opt(i+model.nx:model.nx+model.nu:end)';
 end
 
-GeneratePlots_realdata(model, data, q_opt, v_opt, u_opt);
+% GeneratePlots(model, data, q_opt, v_opt, u_opt);
 
 % showmotion(model, 0:data.Duration/(data.Nint-1):data.Duration, q_opt(:,:))

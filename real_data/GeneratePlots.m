@@ -1,7 +1,7 @@
-﻿function [] = GeneratePlots_realdata(model, data, q_opt, v_opt, u_opt)
+function [] = GeneratePlots(model, data, q_opt, v_opt, u_opt)
 
 t_estim = linspace(0,data.Duration,data.Nint);
-t_simu = linspace(0,data.Duration,data.simNint);
+t_simu = linspace(0,data.Duration,data.Nint);
 
 %     42 degrés de liberté, 17 segments
 %     Segment			Num	Parent	X	Y	Z
@@ -49,14 +49,14 @@ figure()
 subplot(211)
 hold on
 plot(t_estim,q_opt(pelvis_translation,:),'o');
-plot(t_simu,data.q(pelvis_translation,:),'x');
+plot(t_simu,data.kalman_q(pelvis_translation,:),'x');
 hold off
 title('Root translation positions')
 
 subplot(212)
 hold on
 plot(t_estim,q_opt(pelvis_rotation,:),'o');
-plot(t_simu,data.q(pelvis_rotation,:),'x');
+plot(t_simu,data.kalman_q(pelvis_rotation,:),'x');
 hold off
 title('Root rotation positions')
 
@@ -64,14 +64,14 @@ figure()
 subplot(211)
 hold on
 plot(t_estim,q_opt(thorax,:),'o');
-plot(t_simu,data.q(thorax,:),'x');
+plot(t_simu,data.kalman_q(thorax,:),'x');
 hold off
 title('Thorax positions')
 
 subplot(212)
 hold on
 plot(t_estim,q_opt(head,:),'o');
-plot(t_simu,data.q(head,:),'x');
+plot(t_simu,data.kalman_q(head,:),'x');
 hold off
 title('Head positions')
 
@@ -79,28 +79,28 @@ figure()
 subplot(221)
 hold on
 plot(t_estim,q_opt(right_shoulder,:),'o');
-plot(t_simu,data.q(right_shoulder,:),'x');
+plot(t_simu,data.kalman_q(right_shoulder,:),'x');
 hold off
 title('Right shoulder positions')
 
 subplot(222)
 hold on
 plot(t_estim,q_opt(right_arm,:),'o');
-plot(t_simu,data.q(right_arm,:),'x');
+plot(t_simu,data.kalman_q(right_arm,:),'x');
 hold off
 title('Right arm positions')
 
 subplot(223)
 hold on
 plot(t_estim,q_opt(right_forarm,:),'o');
-plot(t_simu,data.q(right_forarm,:),'x');
+plot(t_simu,data.kalman_q(right_forarm,:),'x');
 hold off
 title('Right forarm positions')
 
 subplot(224)
 hold on
 plot(t_estim,q_opt(right_hand,:),'o');
-plot(t_simu,data.q(right_hand,:),'x');
+plot(t_simu,data.kalman_q(right_hand,:),'x');
 hold off
 title('Right hand positions')
 
@@ -108,27 +108,28 @@ figure()
 subplot(221)
 hold on
 plot(t_estim,q_opt(left_shoulder,:),'o');
-plot(t_simu,data.q(left_shoulder,:),'x');
+plot(t_simu,data.kalman_q(left_shoulder,:),'x');
 hold off
 title('Left shoulder positions')
 
 subplot(222)
 hold on
 plot(t_estim,q_opt(left_arm,:),'o');
-plot(t_simu,data.q(left_arm,:),'x');
+plot(t_simu,data.kalman_q(left_arm,:),'x');
 hold off
 title('Left arm positions')
 
 subplot(223)
 hold on
 plot(t_estim,q_opt(left_forarm,:),'o');
-plot(t_simu,data.q(left_forarm,:),'x');
+plot(t_simu,data.kalman_q(left_forarm,:),'x');
 hold off
 title('Left forarm positions')
 
 subplot(224)
 hold on
 plot(t_estim,q_opt(left_hand,:),'o');
+plot(t_simu,data.kalman_q(left_hand,:),'x');
 hold off
 title('Left hand positions')
 
@@ -136,21 +137,21 @@ figure()
 subplot(221)
 hold on
 plot(t_estim,q_opt(right_thigh,:),'o');
-plot(t_simu,data.q(right_thigh,:),'x');
+plot(t_simu,data.kalman_q(right_thigh,:),'x');
 hold off
 title('Right thigh positions')
 
 subplot(222)
 hold on
 plot(t_estim,q_opt(right_leg,:),'o');
-plot(t_simu,data.q(right_leg,:),'x');
+plot(t_simu,data.kalman_q(right_leg,:),'x');
 hold off
 title('Right leg positions')
 
 subplot(223)
 hold on
 plot(t_estim,q_opt(right_foot,:),'o');
-plot(t_simu,data.q(right_foot,:),'x');
+plot(t_simu,data.kalman_q(right_foot,:),'x');
 hold off
 title('Right foot positions')
 
@@ -158,21 +159,21 @@ figure()
 subplot(221)
 hold on
 plot(t_estim,q_opt(left_thigh,:),'o');
-plot(t_simu,data.q(left_thigh,:),'x');
+plot(t_simu,data.kalman_q(left_thigh,:),'x');
 hold off
 title('Left thigh positions')
 
 subplot(222)
 hold on
 plot(t_estim,q_opt(left_leg,:),'o');
-plot(t_simu,data.q(left_leg,:),'x');
+plot(t_simu,data.kalman_q(left_leg,:),'x');
 hold off
 title('Left leg positions')
 
 subplot(223)
 hold on
 plot(t_estim,q_opt(left_foot,:),'o');
-plot(t_simu,data.q(left_foot,:),'x');
+plot(t_simu,data.kalman_q(left_foot,:),'x');
 hold off
 title('Left foot positions')
 

@@ -23,14 +23,14 @@ x = zeros(model.nx,1);
 u = zeros(model.nu,1);
 
 % Initial velocities
-x(N+1) = 1;
-x(N+3) = 9.81/2;
+% x(N+1) = 1;
+% x(N+3) = 9.81/2;
 % x(N+4) = 0;
 % x(N+7) = 2;
 % x(N+8) = 2;
 % x(N+9) = 2;
 
-u(1) = 0.2;
+u(1) = -2;
 
 [N_cardinal_coor, N_markers] = size(model.markers.coordinates);
 PosMarkers = zeros(simNint, N_cardinal_coor * N_markers);
@@ -53,17 +53,17 @@ for i = 2:simNint
     Xi(:,i) = x;
     
     if i == floor(simNint/8-1)
-        u(1) = -0.2;
-    elseif i == floor(simNint*3/8-1)
-        u(1) = 0.2;
+        u(1) = 2;
+%     elseif i == floor(simNint*3/8-1)
+%         u(1) = 0.2;
 %     elseif i == floor(simNint*4/8-1)
 %         u(4) = 0.2;
-    elseif i == floor(simNint*5/8-1)
-        u(1) = -0.2;
+%     elseif i == floor(simNint*5/8-1)
+%         u(1) = -0.2;
 %     elseif i == floor(simNint*6/8-1)
 %         u(4) = -0.2;
-    elseif i == floor(simNint*7/8-1)
-        u(1) = 0.2;
+%     elseif i == floor(simNint*7/8-1)
+%         u(1) = 0.2;
     end
     
     Ui(:,i) = u;
@@ -108,10 +108,4 @@ data.u = Ui;
 data.markers = PosMarkers;
 data.gaussianNoiseX = GaussianNoise_x;
 data.gaussianNoiseMarkers = GaussianNoise_PosMarkers;
-end
-
-function new_value = range_conversion(old_value, old_max, old_min, new_max, new_min)
-old_range = (old_max - old_min);
-new_range = (new_max - new_min);
-new_value = (((old_value - old_min) * new_range) / old_range) + new_min;
 end

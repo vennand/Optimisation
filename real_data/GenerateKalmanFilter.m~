@@ -1,0 +1,28 @@
+function [model, data] = GenerateKalmanFilter(model,data)
+
+% Assuming there is only one variable, and that it is q
+real_data = load(data.dataFile);
+real_data = struct2cell(real_data);
+q = real_data{1};
+
+Nint = data.Nint;
+realNint = size(q);
+[N_cardinal_coor, N_markers] = size(model.markers.coordinates);
+new_q = zeros(Nint, N_cardinal_coor * N_markers);
+PosMarkers = zeros(Nint, N_cardinal_coor * N_markers);
+
+for old_value = 1:Nint
+    new_value = range_conversion(old_value, Nint, 1, realNint, 1);
+    new_q = q(:,new_value);
+end
+
+% for old_value = 1:Nint
+%     new_value = range_conversion(old_value, Nint, 1, realNint, 1);
+%     PosMarkers(old_value,:) = base_referential_coor(model,q(:,new_value));
+% end
+% 
+% % Storing data
+% data.q = q;
+% data.markers = PosMarkers;
+
+end

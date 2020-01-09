@@ -10,7 +10,7 @@ model.NB = str2double(nDoF)-5;
 model.parent = [0 1 2 3];
 model.jtype = {'R', 'Rx', 'Ry', 'Rz'};
 
-model.Xtree = { eye(6), inv(pluho([0 1 0 0;-1 0 0 1;0 0 1 0;0 0 0 1])), eye(6), eye(6) };
+model.Xtree = { eye(6), inv(pluho([0 -1 0 1;1 0 0 0;0 0 1 0;0 0 0 1])), eye(6), eye(6) };
 
 rod1 = mcI( 1, [0.5,0,0], diag([0.01,1,1]) );
 rod2 = mcI( 1, [0.5,0,0], diag([0.01,1,1]) );

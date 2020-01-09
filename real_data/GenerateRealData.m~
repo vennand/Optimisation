@@ -1,0 +1,35 @@
+function [model, data] = GenerateRealData(model,data)
+% Spécific à Do_822_contact_2.c3d
+% Le saut est entre les frames 3050 et 3385
+frames = 3050:3386;
+labels = 1:95;
+
+data.dataFile = 'Do_822_contact_2.c3d';
+real_data = ezc3dRead(data.dataFile);
+
+Nint = data.Nint;
+[N_cardinal_coor, N_markers] = size(model.markers.coordinates);
+PosMarkers = zeros(Nint, N_cardinal_coor * N_markers);
+
+markers = real_data.data.points(:,labels,frames);
+[num_dimension, num_label, num_frames] = size(markers);
+
+markers_reformat = [];
+marker = zeros(1,num_dimension);
+for frame = 1:num_frames
+    for label = 1:num_label
+        for dimension = 1:num_dimension
+            marker(dimension) = markers(dimension,label,frame);
+        end
+        markers_reformat(frame,:) = marker;
+    end
+end
+
+for old_value = 1:Nint
+    new_value = range_conversion(old_value, Nint, 1, realNint, 1);
+    PosMarkers(old_value,:) = markers_reformat(new_value,:);
+end
+
+% Storing data
+data.markers = PosMarkers;
+end
