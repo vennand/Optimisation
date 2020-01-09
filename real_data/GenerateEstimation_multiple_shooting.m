@@ -8,20 +8,30 @@ dN = T/Nint;
 
 [N_cardinal_coor, N_markers] = size(model.markers.coordinates);
 
+% markers = data.markers;
+
 tau_base = SX.zeros(6,1);
 forDyn = @(x,u)[  x(model.idx_v)
     FDab_Casadi( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base ,u)  )];
 x = SX.sym('x', model.nx,1);
 u = SX.sym('u', model.nu,1);
-% markers = SX.sym('markers', N_cardinal_coor * N_markers);
+markers = SX.sym('markers', N_cardinal_coor * N_markers);
 
 L = @(x)base_referential_coor(model, x(1:model.NB)); % Estimated marker positions, not objective function
 S = @(u)0.05* (u'*u);
 
 f = Function('f', {x, u}, {forDyn(x,u)});
-% fJ = Function('fJ', {x, u, markers}, {S(u) + objective_func(model,markers,L(x))});
+fJ = Function('fJ', {x, u, markers}, {S(u) + objective_func(model,markers,L(x))});
 
 markers = data.markers;
+
+% fJ_struct = struct;
+% for k=1:Nint
+%     disp(['Generating objective function for node: ', num2str(k)])
+%     function_name = ['fJ_' num2str(k)];
+%     fJ = Function(function_name, {x, u}, {S(u) + objective_func(model,markers(k,:),L(x))});
+%     fJ_struct.(function_name) = fJ;
+% end
 
 % Start with an empty NLP
 w={};
@@ -42,8 +52,11 @@ w = {w{:}, Uk};
 lbw = [lbw; model.umin];
 ubw = [ubw; model.umax];
 
-J = J + S(Uk) + objective_func(model,markers(1,:),L(Xk));
-% J = J + fJ(Xk, Uk, markers(1,:));
+J = J + fJ(Xk, Uk, markers(1,:));
+% J = J + S(Uk) + objective_func(model,markers(1,:),L(Xk));
+% function_name = 'fJ_1';
+% fJ = fJ_struct.(function_name);
+% J = J + fJ(Xk, Uk);
 
 M = 4;
 DT = dN/M;
@@ -72,9 +85,12 @@ for k=1:Nint-1
     g = {g{:}, Xkend - Xk};
     lbg = [lbg; zeros(model.nx,1)];
     ubg = [ubg; zeros(model.nx,1)];
-    disp(['Calculating node: ', num2str(k)])
-    J = J + S(Uk) + objective_func(model,markers(k+1,:),L(Xk));
-%     J = J + fJ(Xk, Uk, markers(k+1,:));
+    
+%     disp(['Calculating Node: ', num2str(k+1)])
+    J = J + fJ(Xk, Uk, markers(k+1,:));
+%     function_name = ['fJ_' num2str(k+1)];
+%     fJ = fJ_struct.(function_name);
+%     J = J + fJ(Xk, Uk);
 end
 
 prob = struct('f', J, 'x', vertcat(w{:}), 'g', vertcat(g{:}));
@@ -94,11 +110,10 @@ for m = 1:N_markers
     distance_between_points = 0;
     for l = 1:N_cardinal_coor
         n = n + 1;
-        if class(markers(n)) == "casadi.SX"
-            distance_between_points = distance_between_points + (markers(n) - estimated_markers{n}).^2;
-        elseif ~isnan(markers(n)) % To deal with missing markers (maybe add check for NaN on all 3)
-            distance_between_points = distance_between_points + (markers(n) - estimated_markers{n}).^2;
-        end
+%         if ~isnan(markers(n)) % To deal with missing markers (maybe add check for NaN on all 3)
+%             distance_between_points = distance_between_points + (markers(n) - estimated_markers{n}).^2;
+%         end
+        distance_between_points = if_else(markers(n) == markers(n), distance_between_points + (markers(n) - estimated_markers{n}).^2, distance_between_points);
     end
     J = J + 0.5 * distance_between_points;
 end

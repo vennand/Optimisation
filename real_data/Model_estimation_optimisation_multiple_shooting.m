@@ -7,7 +7,7 @@ import casadi.*
 nDoF = '42';
 
 % data.Duration = 1; % Time horizon
-data.Nint = 121;% number of control nodes
+data.Nint = 21;% number of control nodes
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
@@ -19,7 +19,7 @@ data.kalmanDataFile = 'Do_822_contact_2_MOD200.00_GenderF_DoCig_Q.mat';
 data.frames = 3050:3386;
 data.labels = 1:95;
 
-data.realNint = length(frames);
+data.realNint = length(data.frames);
 
 data.weightU = 0.05;
 data.weightPoints = 1;
@@ -39,13 +39,14 @@ options = struct;
 options.ipopt.max_iter = 3000;
 options.ipopt.print_level = 5;
 
+disp('Generating Solver')
 % solver = nlpsol('solver', 'snopt', prob, options); % FAIRE MARCHER ÇA
 solver = nlpsol('solver', 'ipopt', prob, options);
 
 w0=[];
 for k=1:data.Nint
 %     w0 = [w0;  data.x0];
-    w0 = [w0;  data.kalman_q(:,k)];
+    w0 = [w0;  data.kalman_q(:,k); data.x0(model.nq+1:end)];
     w0 = [w0;  data.u0];
 end
 
