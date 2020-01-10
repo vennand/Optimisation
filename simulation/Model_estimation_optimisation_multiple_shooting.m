@@ -4,10 +4,10 @@ clear, clc, close all
 run('startup.m')
 import casadi.*
 
-nDoF = '9';
+data.nDoF = 9;
 
 data.Duration = 1; % Time horizon
-data.Nint = 21;% number of control nodes
+data.Nint = 20;% number of control nodes
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
@@ -18,7 +18,7 @@ data.weightU = 0.01;
 data.weightPoints = 1;
 
 disp('Generating Model')
-[model, data] = GenerateModel(data);
+[model, data] = GenerateModel_9(data);
 disp('Generating Simulation')
 [model, data] = GenerateSimulation_RK4(model,data);
 disp('Calculating Estimation')
@@ -40,11 +40,12 @@ for k=1:data.Nint
 %     w0 = [w0;  data.x0];
 %     w0 = [w0;  data.u0];
 end
+w0 = [w0;  data.x(:,data.Nint+1)];
 
 sol = solver('x0', w0, 'lbx', lbw, 'ubx', ubw, 'lbg', lbg, 'ubg', ubg);
 
-q_opt = nan(model.nq,data.Nint);
-v_opt = nan(model.nq,data.Nint);
+q_opt = nan(model.nq,data.Nint+1);
+v_opt = nan(model.nq,data.Nint+1);
 u_opt = nan(model.nu,data.Nint);
 w_opt = full(sol.x);
 
@@ -56,7 +57,7 @@ for i=1:model.nu
     u_opt(i,:) = w_opt(i+model.nx:model.nx+model.nu:end)';
 end
 
-% GeneratePlots(model, data, q_opt, v_opt, u_opt);
+GeneratePlots(model, data, q_opt, v_opt, u_opt);
 
 % showmotion(model, 0:data.Duration/(data.Nint-1):data.Duration, q_opt(:,:))
 % showmotion(model, 0:data.Duration/(data.Nint-1):data.Duration, data.xFull(1:model.nq,:))

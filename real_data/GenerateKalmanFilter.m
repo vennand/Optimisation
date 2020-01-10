@@ -11,11 +11,11 @@ q = q(:,frames);
 
 Nint = data.Nint;
 realNint = data.realNint;
-new_q = zeros(dof, Nint);
+new_q = zeros(dof, Nint+1);
 
-for old_value = 1:Nint
-    new_value = range_conversion(old_value, Nint, 1, realNint, 1);
-    new_q(:,old_value) = q(:,floor(new_value));
+for old_value = 1:Nint+1
+    new_value = range_conversion(old_value, Nint+1, 1, realNint, 1);
+    new_q(:,old_value) = q(:,round(new_value));
 end
 
 % Storing data

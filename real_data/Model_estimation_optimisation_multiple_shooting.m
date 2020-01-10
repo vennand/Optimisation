@@ -4,10 +4,10 @@ clear, clc, close all
 run('startup.m')
 import casadi.*
 
-nDoF = '42';
+data.nDoF = 42;
 
 % data.Duration = 1; % Time horizon
-data.Nint = 21;% number of control nodes
+data.Nint = 100;% number of control nodes
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
@@ -31,13 +31,16 @@ disp('Generating Kalman Filter')
 disp('Generating Real Data')
 [model, data] = GenerateRealData(model,data);
 disp('Calculating Estimation')
-[prob, lbw, ubw, lbg, ubg] = GenerateEstimation_multiple_shooting(model, data);
+[prob, lbw, ubw, lbg, ubg, fobj] = GenerateEstimation_multiple_shooting(model, data);
 
 % [lbw, ubw] = GenerateInitialConstraints(model, data, lbw, ubw);
 
 options = struct;
 options.ipopt.max_iter = 3000;
 options.ipopt.print_level = 5;
+
+
+
 
 disp('Generating Solver')
 % solver = nlpsol('solver', 'snopt', prob, options); % FAIRE MARCHER ÇA
@@ -49,11 +52,12 @@ for k=1:data.Nint
     w0 = [w0;  data.kalman_q(:,k); data.x0(model.nq+1:end)];
     w0 = [w0;  data.u0];
 end
+w0 = [w0;  data.kalman_q(:,data.Nint+1); data.x0(model.nq+1:end)];
 
 sol = solver('x0', w0, 'lbx', lbw, 'ubx', ubw, 'lbg', lbg, 'ubg', ubg);
 
-q_opt = nan(model.nq,data.Nint);
-v_opt = nan(model.nq,data.Nint);
+q_opt = nan(model.nq,data.Nint+1);
+v_opt = nan(model.nq,data.Nint+1);
 u_opt = nan(model.nu,data.Nint);
 w_opt = full(sol.x);
 
