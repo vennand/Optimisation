@@ -27,6 +27,7 @@ addpath( genpath('../include/biorbd_matlab') );
 addpath( genpath('../include/ezc3d_matlab') );
 
 addpath( genpath('../functions') );
+addpath( genpath('../data') );
 
 addpath( genpath('../include/SNOPT/linux') );
 setenv('SNOPT_LICENSE','../include/SNOPT/linux/snopt7.lic')

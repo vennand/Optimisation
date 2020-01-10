@@ -11,8 +11,10 @@ data.Nint = 100;% number of control nodes
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
-data.dataFile = 'Do_822_contact_2.c3d';
-data.kalmanDataFile = 'Do_822_contact_2_MOD200.00_GenderF_DoCig_Q.mat';
+data.dataFile = '../data/Do_822_contact_2.c3d';
+data.kalmanDataFile_q = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_Q.mat';
+data.kalmanDataFile_v = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_V.mat';
+data.kalmanDataFile_a = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_A.mat';
 
 % Spécific à Do_822_contact_2.c3d
 % Le saut est entre les frames 3050 et 3385
@@ -39,9 +41,6 @@ options = struct;
 options.ipopt.max_iter = 3000;
 options.ipopt.print_level = 5;
 
-
-
-
 disp('Generating Solver')
 % solver = nlpsol('solver', 'snopt', prob, options); % FAIRE MARCHER ÇA
 solver = nlpsol('solver', 'ipopt', prob, options);
@@ -49,10 +48,10 @@ solver = nlpsol('solver', 'ipopt', prob, options);
 w0=[];
 for k=1:data.Nint
 %     w0 = [w0;  data.x0];
-    w0 = [w0;  data.kalman_q(:,k); data.x0(model.nq+1:end)];
-    w0 = [w0;  data.u0];
+    w0 = [w0;  data.kalman_q(:,k); data.kalman_v(:,k)];
+    w0 = [w0;  data.kalman_tau(:,k)];
 end
-w0 = [w0;  data.kalman_q(:,data.Nint+1); data.x0(model.nq+1:end)];
+w0 = [w0;  data.kalman_q(:,data.Nint+1); data.kalman_v(:,data.Nint+1)];
 
 sol = solver('x0', w0, 'lbx', lbw, 'ubx', ubw, 'lbg', lbg, 'ubg', ubg);
 
