@@ -17,14 +17,14 @@ markers = SX.sym('markers', N_cardinal_coor * N_markers);
 is_nan  = SX.sym('markers', N_cardinal_coor * N_markers);
 
 L = @(x)base_referential_coor(model, x(1:model.NB)); % Estimated marker positions, not objective function
-S = @(u)0.05* (u'*u);
+S = @(u)data.weightU * (u'*u);
 
 f = Function('f', {x, u}, {forDyn(x,u)});
 fJu = Function('fJ', {u}, {S(u)});
-fJmarkers = Function('fJ', {x, markers, is_nan}, {objective_func(model,markers,is_nan,L(x))});
+fJmarkers = Function('fJ', {x, markers, is_nan}, {data.weightPoints * objective_func(model,markers,is_nan,L(x))});
 
 markers = data.markers;
-is_nan = double(isnan(data.markers));
+is_nan = double(isnan(markers));
 
 % Start with an empty NLP
 w={};
@@ -78,7 +78,7 @@ prob = struct('f', J, 'x', vertcat(w{:}), 'g', vertcat(g{:}));
 
 end
 
-
+% Defined to be inside a CasADi function
 function J = objective_func(model,markers,is_nan,estimated_markers)
 J = 0;
 

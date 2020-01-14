@@ -1,7 +1,7 @@
 function [model, data] = GenerateKalmanFilter(model,data)
 frames = data.frames;
 
-% Assuming there is only one variable, and that it is q, v, a and tau
+% Assuming there is only one variable per file, and that they are q, v and a
 kalmanData_q = load(data.kalmanDataFile_q);
 kalmanData_v = load(data.kalmanDataFile_v);
 kalmanData_a = load(data.kalmanDataFile_a);

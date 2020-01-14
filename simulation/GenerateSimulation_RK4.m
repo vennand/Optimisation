@@ -30,7 +30,7 @@ x(N+3) = 9.81/2;
 % x(N+8) = 2;
 % x(N+9) = 2;
 
-u(1) = -0.2;
+% u(3) = 1;
 
 [N_cardinal_coor, N_markers] = size(model.markers.coordinates);
 PosMarkers = zeros(simNint+1, N_cardinal_coor * N_markers);
@@ -53,8 +53,8 @@ for i = 2:simNint+1
     x = full(x);
     Xi(:,i) = x;
     
-    if i == floor(simNint/2)
-        u(1) = 0.2;
+%     if i == floor(simNint/2)
+%         u(1) = 0.2;
 %     elseif i == floor(simNint*3/8-1)
 %         u(1) = 0.2;
 %     elseif i == floor(simNint*4/8-1)
@@ -65,7 +65,7 @@ for i = 2:simNint+1
 %         u(4) = -0.2;
 %     elseif i == floor(simNint*7/8-1)
 %         u(1) = 0.2;
-    end
+%     end
     
     PosMarkers(i,:) = base_referential_coor(model,x(model.idx_q));
 end
@@ -75,7 +75,7 @@ rng(0,'twister'); % So that the gaussian is always the same
 GaussianNoise_x = Xi + sqrt(variance).*(2.*rand(model.nx,simNint+1)-1);
 
 GaussianNoise_PosMarkers = zeros(simNint+1, N_cardinal_coor * N_markers);
-for i = 1:simNint
+for i = 1:simNint+1
     GaussianNoise_PosMarkers(i,:) = base_referential_coor(model,GaussianNoise_x(:,i));
 end
 
@@ -105,6 +105,10 @@ for old_value = 1:Nint
     
     Ui(:,old_value) = data.uFull(:,round(new_value));
 end
+
+% GaussianNoise_PosMarkers(2,1:3:9) = NaN;
+% GaussianNoise_PosMarkers(2,2:3:9) = NaN;
+% GaussianNoise_PosMarkers(2,3:3:9) = NaN;
 
 data.x = Xi;
 data.u = Ui;

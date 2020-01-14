@@ -4,10 +4,10 @@ clear, clc, close all
 run('startup.m')
 import casadi.*
 
-data.nDoF = 9;
+data.nDoF = 42;
 
 data.Duration = 1; % Time horizon
-data.Nint = 20;% number of control nodes
+data.Nint = 3;% number of control nodes
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
@@ -18,7 +18,7 @@ data.weightU = 0.01;
 data.weightPoints = 1;
 
 disp('Generating Model')
-[model, data] = GenerateModel_9(data);
+[model, data] = GenerateModel(data);
 disp('Generating Simulation')
 [model, data] = GenerateSimulation_RK4(model,data);
 disp('Calculating Estimation')
@@ -30,6 +30,7 @@ options = struct;
 options.ipopt.max_iter = 3000;
 options.ipopt.print_level = 5;
 
+disp('Generating Solver')
 % solver = nlpsol('solver', 'snopt', prob, options); % FAIRE MARCHER ÇA
 solver = nlpsol('solver', 'ipopt', prob, options);
 
@@ -59,5 +60,5 @@ end
 
 GeneratePlots(model, data, q_opt, v_opt, u_opt);
 
-% showmotion(model, 0:data.Duration/(data.Nint-1):data.Duration, q_opt(:,:))
-% showmotion(model, 0:data.Duration/(data.Nint-1):data.Duration, data.xFull(1:model.nq,:))
+% showmotion(model, 0:data.Duration/data.Nint:data.Duration, q_opt(:,:))
+% showmotion(model, 0:data.Duration/data.Nint:data.Duration, data.xFull(1:model.nq,:))

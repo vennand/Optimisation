@@ -22,7 +22,7 @@ data.labels = 1:95;
 
 data.realNint = length(data.frames);
 
-data.weightU = 0.01;
+data.weightU = 0.0;
 data.weightPoints = 1;
 
 disp('Generating Model')
@@ -32,7 +32,7 @@ disp('Generating Kalman Filter')
 disp('Generating Real Data')
 [model, data] = GenerateRealData(model,data);
 disp('Calculating Estimation')
-[prob, lbw, ubw, lbg, ubg, fobj] = GenerateEstimation_multiple_shooting(model, data);
+[prob, lbw, ubw, lbg, ubg] = GenerateEstimation_multiple_shooting(model, data);
 
 % [lbw, ubw] = GenerateInitialConstraints(model, data, lbw, ubw);
 
@@ -46,13 +46,13 @@ solver = nlpsol('solver', 'ipopt', prob, options);
 
 w0=[];
 for k=1:data.Nint
-%     w0 = [w0;  data.x0];
-    w0 = [w0;  data.kalman_q(:,k); data.kalman_v(:,k)];
-%     w0 = [w0;  data.u0];
-    w0 = [w0;  data.kalman_tau(:,k)];
+    w0 = [w0;  data.x0];
+%     w0 = [w0;  data.kalman_q(:,k); data.kalman_v(:,k)];
+    w0 = [w0;  data.u0];
+%     w0 = [w0;  data.kalman_tau(:,k)];
 end
-% w0 = [w0;  data.x0];
-w0 = [w0;  data.kalman_q(:,data.Nint+1); data.kalman_v(:,data.Nint+1)];
+w0 = [w0;  data.x0];
+% w0 = [w0;  data.kalman_q(:,data.Nint+1); data.kalman_v(:,data.Nint+1)];
 
 sol = solver('x0', w0, 'lbx', lbw, 'ubx', ubw, 'lbg', lbg, 'ubg', ubg);
 
@@ -71,4 +71,4 @@ end
 
 % GeneratePlots(model, data, q_opt, v_opt, u_opt);
 
-% showmotion(model, 0:data.Duration/(data.Nint-1):data.Duration, q_opt(:,:))
+% showmotion(model, 0:data.Duration/data.Nint:data.Duration, q_opt(:,:))
