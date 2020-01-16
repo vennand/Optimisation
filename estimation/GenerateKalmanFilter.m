@@ -46,11 +46,11 @@ end
 data.kalman_q = new_q;
 data.kalman_v = new_v;
 data.kalman_a = new_a;
-data.kalman_tau = new_tau;
+data.kalman_tau = new_tau(:,1:end-1);
 
 data.kalman_qFull = q;
 data.kalman_vFull = v;
 data.kalman_aFull = a;
-data.kalman_tauFull = tau;
+data.kalman_tauFull = tau(:,1:end-1);
 
 end

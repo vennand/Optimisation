@@ -6,18 +6,19 @@ import casadi.*
 
 data.nDoF = 42;
 
-data.Nint = 100;% number of control nodes
+data.Nint = 10;% number of control nodes
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
 data.dataFile = '../data/Do_822_contact_2.c3d';
-data.kalmanDataFile_q = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_Q_brut.mat';
-data.kalmanDataFile_v = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_V_brut.mat';
-data.kalmanDataFile_a = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_A_brut.mat';
+data.kalmanDataFile_q = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_Q.mat';
+data.kalmanDataFile_v = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_V.mat';
+data.kalmanDataFile_a = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_A.mat';
 
 % Spécific à Do_822_contact_2.c3d
-% Le saut est entre les frames 3050 et 3385
-data.frames = 3050:3386;
+% Le saut est entre les frames 3050 et 3386
+% data.frames = 3050:3386;
+data.frames = 3050:3060;
 data.labels = 1:95;
 
 data.realNint = length(data.frames);
@@ -39,6 +40,7 @@ disp('Calculating Estimation')
 options = struct;
 options.ipopt.max_iter = 3000;
 options.ipopt.print_level = 5;
+options.ipopt.hessian_approximation = 'limited-memory';
 
 disp('Generating Solver')
 % solver = nlpsol('solver', 'snopt', prob, options); % FAIRE MARCHER ÇA
@@ -46,13 +48,13 @@ solver = nlpsol('solver', 'ipopt', prob, options);
 
 w0=[];
 for k=1:data.Nint
-    w0 = [w0;  data.x0];
-%     w0 = [w0;  data.kalman_q(:,k); data.kalman_v(:,k)];
-    w0 = [w0;  data.u0];
-%     w0 = [w0;  data.kalman_tau(:,k)];
+%     w0 = [w0;  data.x0];
+    w0 = [w0;  data.kalman_q(:,k); data.kalman_v(:,k)];
+%     w0 = [w0;  data.u0];
+    w0 = [w0;  data.kalman_tau(:,k)];
 end
-w0 = [w0;  data.x0];
-% w0 = [w0;  data.kalman_q(:,data.Nint+1); data.kalman_v(:,data.Nint+1)];
+% w0 = [w0;  data.x0];
+w0 = [w0;  data.kalman_q(:,data.Nint+1); data.kalman_v(:,data.Nint+1)];
 
 sol = solver('x0', w0, 'lbx', lbw, 'ubx', ubw, 'lbg', lbg, 'ubg', ubg);
 

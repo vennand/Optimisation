@@ -12,8 +12,6 @@ labels_name = real_data.parameters.POINT.LABELS.DATA(labels);
 Nint = data.Nint;
 [num_dimension, num_label, num_frames] = size(markers);
 
-% Repositioning origin
-
 markers_reformat = zeros(num_dimension, num_label, Nint+1);
 
 for old_value = 1:Nint+1
@@ -21,8 +19,19 @@ for old_value = 1:Nint+1
     markers_reformat(:,:,old_value) = markers(:,:,round(new_value));
 end
 
+%Reorder the labels according to the model
 [dummy, order] = ismember(model.markers.name, labels_name);
 markers_reformat = markers_reformat(:,order,:);
+
+%Reposition the referential to the model
+ref_rotation = inv(refential_matrix());
+for k=1:Nint+1
+    for label=labels
+        markers_reformat(:,label,k) = ref_rotation * markers_reformat(:,label,k);
+    end
+end
+
+%Reposition Kalman filter
 
 markers_reformat = reshape(markers_reformat, num_dimension*num_label, Nint+1)';
 
