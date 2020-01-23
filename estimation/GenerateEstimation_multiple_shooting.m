@@ -14,14 +14,19 @@ forDyn = @(x,u)[  x(model.idx_v)
 x = SX.sym('x', model.nx,1);
 u = SX.sym('u', model.nu,1);
 markers = SX.sym('markers', N_cardinal_coor * N_markers);
-is_nan  = SX.sym('markers', N_cardinal_coor * N_markers);
+is_nan  = SX.sym('is_nan', N_cardinal_coor * N_markers);
 
 L = @(x)base_referential_coor(model, x(1:model.NB)); % Estimated marker positions, not objective function
 S = @(u)data.weightU * (u'*u);
 
 f = Function('f', {x, u}, {forDyn(x,u)});
-fJu = Function('fJ', {u}, {S(u)});
+fJu = Function('fJu', {u}, {S(u)});
 fJmarkers = Function('fJ', {x, markers, is_nan}, {data.weightPoints * objective_func(model,markers,is_nan,L(x))});
+
+ode = struct('x',x,'p',u,'ode',[  x(model.idx_v)
+    FDab_Casadi( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base ,u)  )]);
+opts = struct('t0',0,'tf',dN,'number_of_finite_elements',4);
+RK4 = integrator('RK4','rk',ode,opts);
 
 markers = data.markers;
 is_nan = double(isnan(markers));
@@ -35,7 +40,12 @@ g={};
 lbg = [];
 ubg = [];
 
+% kalman_q = data.kalman_q;
+% kalman_v = data.kalman_v;
+% kalman_tau = data.kalman_tau;
+
 Xk = MX.sym(['X_' '0'], model.nx);
+% Xk = [kalman_q(:,1) ; kalman_v(:,1)];
 w = {w{:}, Xk};
 lbw = [lbw; model.xmin];
 ubw = [ubw; model.xmax];
@@ -46,10 +56,13 @@ M = 4;
 DT = dN/M;
 for k=0:Nint-1
     Uk = MX.sym(['U_' num2str(k)], model.nu);
+%     Uk = kalman_tau(:,k+1);
     w = {w{:}, Uk};
     lbw = [lbw; model.umin];
     ubw = [ubw; model.umax];
     
+%     Xk = RK4('x0',Xk,'p',Uk);
+%     Xk = Xk.xf;
     for j=1:M
         k1 = f(Xk, Uk);
         k2 = f(Xk + DT/2 * k1, Uk);
@@ -62,12 +75,14 @@ for k=0:Nint-1
     Xkend = Xk;
     
     J = J + fJu(Uk);
-    J = J + fJmarkers(Xk, markers(k+2,:), is_nan(k+2,:));
     
     Xk = MX.sym(['X_' num2str(k+1)], model.nx);
+%     Xk = [kalman_q(:,k+2) ; kalman_v(:,k+2)];
     w = {w{:}, Xk};
     lbw = [lbw; model.xmin];
     ubw = [ubw; model.xmax];
+    
+    J = J + fJmarkers(Xk, markers(k+2,:), is_nan(k+2,:));
     
     g = {g{:}, Xkend - Xk};
     lbg = [lbg; zeros(model.nx,1)];

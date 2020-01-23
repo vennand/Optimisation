@@ -1,0 +1,31 @@
+﻿La génération a démarré 2018-06-18 12:16:13.
+     1>Projet "E:\Librairies\biorbd\18_juin_2018\release\wrapper\matlab\S2M_rbdl.vcxproj" sur le nœud 3 (build cible(s)).
+     1>InitializeBuildStatus:
+         Création de "S2M_rbdl.dir\Debug\S2M_rbdl.unsuccessfulbuild", car "AlwaysCreate" a été spécifié.
+       CustomBuild:
+         Building Custom Rule E:/Librairies/biorbd/18_juin_2018/wrapper/matlab/CMakeLists.txt
+         CMake does not need to re-run because E:/Librairies/biorbd/18_juin_2018/release/wrapper/matlab/CMakeFiles/generate.stamp is up-to-date.
+       ClCompile:
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\x86_amd64\CL.exe /c /I"G:\a_installer\RBDL\rbdl_2.6.0\rbdl-rbdl-0879ee8c548a\include" /IE:\Librairies /IE:\Librairies\eigen3 /I"E:\Librairies\dlib\dlib-18.11" /IE:\Librairies\biorbd\18_juin_2018\PUBLIC /IE:\Librairies\biorbd\18_juin_2018\include /I"C:\Program Files\MATLAB\R2016a\extern\include" /IE:\Librairies\biorbd\18_juin_2018\wrapper\matlab\..\..\include /Zi /nologo /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\"Debug\"" /D S2M_rbdl_EXPORTS /D _WINDLL /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /GR /Fo"S2M_rbdl.dir\Debug\\" /Fd"S2M_rbdl.dir\Debug\vcWindows7.1SDK.pdb" /Gd /TP /errorReport:prompt ..\..\..\wrapper\matlab\MexS2M_rbdl.cpp
+         MexS2M_rbdl.cpp
+     1>e:\librairies\biorbd\18_juin_2018\include\s2mActuators.h(34): warning C4267: 'return' : conversion from 'size_t' to 'unsigned int', possible loss of data
+     1>e:\librairies\biorbd\18_juin_2018\wrapper\matlab\processArguments.cpp(4): warning C4018: '<' : signed/unsigned mismatch
+     1>e:\librairies\biorbd\18_juin_2018\wrapper\matlab\processArguments.cpp(8): warning C4018: '>' : signed/unsigned mismatch
+     1>e:\librairies\biorbd\18_juin_2018\wrapper\matlab\processArguments.cpp(182): warning C4018: '<' : signed/unsigned mismatch
+     1>e:\librairies\biorbd\18_juin_2018\wrapper\matlab\processArguments.cpp(336): warning C4800: 'double' : forcing value to bool 'true' or 'false' (performance warning)
+     1>e:\librairies\biorbd\18_juin_2018\wrapper\matlab\S2M_ProjectCustomPoint.cpp(41): warning C4018: '<' : signed/unsigned mismatch
+     1>e:\librairies\biorbd\18_juin_2018\wrapper\matlab\S2M_ProjectPoint.cpp(35): warning C4018: '<' : signed/unsigned mismatch
+     1>e:\librairies\biorbd\18_juin_2018\wrapper\matlab\S2M_segmentAngularMomentum.cpp(26): warning C4018: '>=' : signed/unsigned mismatch
+     1>e:\librairies\biorbd\18_juin_2018\wrapper\matlab\S2M_MusclesActivationDot.cpp(16): warning C4800: 'double' : forcing value to bool 'true' or 'false' (performance warning)
+     1>e:\librairies\biorbd\18_juin_2018\wrapper\matlab\S2M_parent.cpp(19): warning C4018: '>' : signed/unsigned mismatch
+       ManifestResourceCompile:
+         C:\Program Files\Microsoft SDKs\Windows\v7.1\bin\rc.exe /nologo /fo"S2M_rbdl.dir\Debug\S2M_rbdl.mexw64.embed.manifest.res" S2M_rbdl.dir\Debug\S2M_rbdl_manifest.rc 
+       Link:
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"E:\Librairies\biorbd\18_juin_2018\release\wrapper\matlab\Debug\S2M_rbdl.mexw64" /INCREMENTAL /NOLOGO ..\..\Debug\biorbd_debug.lib E:\Librairies\RBDL\librbdl.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /DEF:"E:/Librairies/biorbd/18_juin_2018/wrapper/matlab/Matlabdef.def" /MANIFEST /ManifestFile:"S2M_rbdl.dir\Debug\S2M_rbdl.mexw64.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"E:/Librairies/biorbd/18_juin_2018/release/wrapper/matlab/Debug/S2M_rbdl.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"E:/Librairies/biorbd/18_juin_2018/release/wrapper/matlab/Debug/S2M_rbdl.lib" /MACHINE:X64 /DLL S2M_rbdl.dir\Debug\S2M_rbdl.mexw64.embed.manifest.res
+         S2M_rbdl.dir\Debug\MexS2M_rbdl.obj  /machine:x64
+     1>LINK : fatal error LNK1104: cannot open file '..\..\Debug\biorbd_debug.lib'
+     1>Génération du projet "E:\Librairies\biorbd\18_juin_2018\release\wrapper\matlab\S2M_rbdl.vcxproj" terminée (build cible(s)) -- ÉCHEC.
+
+ÉCHEC de la build.
+
+Temps écoulé 00:00:49.34
