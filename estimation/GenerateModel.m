@@ -154,5 +154,7 @@ model.xmax = [qmax_base';  ... % q
 model.umin = -50*ones(model.nu,1);
 model.umax =  50*ones(model.nu,1);
 
-% model.gravity = [0 0 0];
+if isfield(data, 'gravity')
+    model.gravity = data.gravity;
+end
 end

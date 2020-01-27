@@ -13,8 +13,8 @@ forDyn = @(x,u)[  x(model.idx_v)
     FDab_Casadi( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base ,u)  )];
 x = SX.sym('x', model.nx,1);
 u = SX.sym('u', model.nu,1);
-markers = SX.sym('markers', N_cardinal_coor * N_markers);
-is_nan  = SX.sym('is_nan', N_cardinal_coor * N_markers);
+markers = SX.sym('markers', N_cardinal_coor, N_markers);
+is_nan  = SX.sym('is_nan', N_cardinal_coor, N_markers);
 
 L = @(x)base_referential_coor(model, x(1:model.NB)); % Estimated marker positions, not objective function
 S = @(u)data.weightU * (u'*u);
@@ -23,10 +23,10 @@ f = Function('f', {x, u}, {forDyn(x,u)});
 fJu = Function('fJu', {u}, {S(u)});
 fJmarkers = Function('fJ', {x, markers, is_nan}, {data.weightPoints * objective_func(model,markers,is_nan,L(x))});
 
-ode = struct('x',x,'p',u,'ode',[  x(model.idx_v)
-    FDab_Casadi( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base ,u)  )]);
-opts = struct('t0',0,'tf',dN,'number_of_finite_elements',4);
-RK4 = integrator('RK4','rk',ode,opts);
+% ode = struct('x',x,'p',u,'ode',[  x(model.idx_v)
+%     FDab_Casadi( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base ,u)  )]);
+% opts = struct('t0',0,'tf',dN,'number_of_finite_elements',4);
+% RK4 = integrator('RK4','rk',ode,opts);
 
 markers = data.markers;
 is_nan = double(isnan(markers));
@@ -50,7 +50,7 @@ w = {w{:}, Xk};
 lbw = [lbw; model.xmin];
 ubw = [ubw; model.xmax];
 
-J = J + fJmarkers(Xk, markers(1,:), is_nan(1,:));
+J = J + fJmarkers(Xk, markers(:,:,1), is_nan(:,:,1));
 
 M = 4;
 DT = dN/M;
@@ -82,7 +82,7 @@ for k=0:Nint-1
     lbw = [lbw; model.xmin];
     ubw = [ubw; model.xmax];
     
-    J = J + fJmarkers(Xk, markers(k+2,:), is_nan(k+2,:));
+    J = J + fJmarkers(Xk, markers(:,:,k+2), is_nan(:,:,k+2));
     
     g = {g{:}, Xkend - Xk};
     lbg = [lbg; zeros(model.nx,1)];
