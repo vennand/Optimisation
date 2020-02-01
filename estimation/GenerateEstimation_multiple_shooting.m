@@ -1,4 +1,4 @@
-function [prob, lbw, ubw, lbg, ubg] = GenerateEstimation_multiple_shooting(model, data)
+function [prob, lbw, ubw, lbg, ubg, objFunc, conFunc, objGrad, conGrad] = GenerateEstimation_multiple_shooting(model, data)
 import casadi.*
 
 T = data.Duration; % secondes
@@ -35,7 +35,8 @@ is_nan = double(isnan(markers));
 w={};
 lbw = [];
 ubw = [];
-J = 0;
+Jmarkers = {};
+Ju = 0;
 g={};
 lbg = [];
 ubg = [];
@@ -50,7 +51,8 @@ w = {w{:}, Xk};
 lbw = [lbw; model.xmin];
 ubw = [ubw; model.xmax];
 
-J = J + fJmarkers(Xk, markers(:,:,1), is_nan(:,:,1));
+% Jmarkers = Jmarkers + fJmarkers(Xk, markers(:,:,1), is_nan(:,:,1));
+Jmarkers = {Jmarkers{:}, fJmarkers(Xk, markers(:,:,1), is_nan(:,:,1))};
 
 M = 4;
 DT = dN/M;
@@ -74,7 +76,7 @@ for k=0:Nint-1
     
     Xkend = Xk;
     
-    J = J + fJu(Uk);
+    Ju = Ju + fJu(Uk);
     
     Xk = MX.sym(['X_' num2str(k+1)], model.nx);
 %     Xk = [kalman_q(:,k+2) ; kalman_v(:,k+2)];
@@ -82,14 +84,25 @@ for k=0:Nint-1
     lbw = [lbw; model.xmin];
     ubw = [ubw; model.xmax];
     
-    J = J + fJmarkers(Xk, markers(:,:,k+2), is_nan(:,:,k+2));
+%     Jmarkers = Jmarkers + fJmarkers(Xk, markers(:,:,k+2), is_nan(:,:,k+2));
+    Jmarkers = {Jmarkers{:}, fJmarkers(Xk, markers(:,:,k+2), is_nan(:,:,k+2))};
     
     g = {g{:}, Xkend - Xk};
     lbg = [lbg; zeros(model.nx,1)];
     ubg = [ubg; zeros(model.nx,1)];
 end
 
-prob = struct('f', J, 'x', vertcat(w{:}), 'g', vertcat(g{:}));
+Jmarkers = vertcat(Jmarkers{:});
+w = vertcat(w{:});
+g = vertcat(g{:});
+prob = struct('f', sum(Jmarkers)+Ju, 'x', w, 'g', g);
+
+if nargout >5
+    objFunc = Function('J',  {w}, {Jmarkers, Ju});
+    conFunc = Function('g',  {w}, {g});
+    objGrad = Function('dJ', {w}, {jacobian(Jmarkers,w)});
+    conGrad = Function('dg', {w}, {jacobian(g,w)});
+end 
 
 end
 
@@ -99,15 +112,15 @@ J = 0;
 
 [N_cardinal_coor, N_markers] = size(model.markers.coordinates);
 
-n = 0;
+% n = 0;
 for m = 1:N_markers
     distance_between_points = 0;
     for l = 1:N_cardinal_coor
-        n = n + 1;
+%         n = n + 1;
         distance_between_points = ...
-            if_else(is_nan(n), ...
+            if_else(is_nan(l,m), ...
             distance_between_points, ...
-            distance_between_points + (markers(n) - estimated_markers{n}).^2);
+            distance_between_points + (markers(l,m) - estimated_markers(l,m)).^2);
     end
     J = J + 0.5 * distance_between_points;
 end
