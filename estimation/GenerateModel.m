@@ -76,36 +76,36 @@ data.u0 = zeros(model.nu,1);
 model.idx_q = 1:model.nq;
 model.idx_v = model.nq+1:2*model.nq;
 
-qmin_base = [-inf,-inf,-inf,-inf,-pi/4,-inf];
-qmax_base = [ inf, inf, inf, inf, pi/4, inf];
-qmin_thorax = [-pi/2,-pi/2,-pi/2];
-qmax_thorax = [ pi/2, pi/2, pi/2];
-qmin_tete = [-pi/2,-pi/2,-pi/2];
-qmax_tete = [ pi/2, pi/2, pi/2];
+qmin_base = [-inf,-inf,-inf,-inf,-pi/2.1,-inf];
+qmax_base = [ inf, inf, inf, inf, pi/2.1, inf];
+qmin_thorax = [-pi/2,-pi/2.1,-pi/2];
+qmax_thorax = [ pi/2, pi/2.1, pi/2];
+qmin_tete = [-pi/2,-pi/2.1,-pi/2];
+qmax_tete = [ pi/2, pi/2.1, pi/2];
 qmin_epaule_droite = [-pi/2,-pi/2];
 qmax_epaule_droite = [ pi/2, pi/2];
-qmin_bras_droit = [-pi,-pi/2,-pi];
-qmax_bras_droit = [ pi, pi/2, pi];
+qmin_bras_droit = [-pi,-pi/2.1,-pi];
+qmax_bras_droit = [ pi, pi/2.1, pi];
 qmin_avantbras_droit = [ 0,-pi/2];
 qmax_avantbras_droit = [pi, pi/2];
 qmin_main_droite = [-pi/2,-pi/2];
 qmax_main_droite = [ pi/2, pi/2];
 qmin_epaule_gauche = [-pi/2,-pi/2];
 qmax_epaule_gauche = [ pi/2, pi/2];
-qmin_bras_gauche = [-pi,-pi/2,-pi];
-qmax_bras_gauche = [ pi, pi/2, pi];
+qmin_bras_gauche = [-pi,-pi/2.1,-pi];
+qmax_bras_gauche = [ pi, pi/2.1, pi];
 qmin_avantbras_gauche = [ 0,-pi/2];
 qmax_avantbras_gauche = [pi, pi/2];
 qmin_main_gauche = [-pi/2,-pi/2];
 qmax_main_gauche = [ pi/2, pi/2];
-qmin_cuisse_droite = [-pi,-pi/2,-pi/2];
-qmax_cuisse_droite = [ pi, pi/2, pi/2];
+qmin_cuisse_droite = [-pi,-pi/2.1,-pi/2];
+qmax_cuisse_droite = [ pi, pi/2.1, pi/2];
 qmin_jambe_droite = [-pi];
 qmax_jambe_droite = [  0];
 qmin_pied_droit = [-pi/2,-pi/2];
 qmax_pied_droit = [ pi/2, pi/2];
-qmin_cuisse_gauche = [-pi,-pi/2,-pi/2];
-qmax_cuisse_gauche = [ pi, pi/2, pi/2];
+qmin_cuisse_gauche = [-pi,-pi/2.1,-pi/2];
+qmax_cuisse_gauche = [ pi, pi/2.1, pi/2];
 qmin_jambe_gauche = [-pi];
 qmax_jambe_gauche = [  0];
 qmin_pied_gauche = [-pi/2,-pi/2];
@@ -131,7 +131,7 @@ model.xmin = [qmin_base'; ... % q
               qmin_cuisse_gauche'; ...
               qmin_jambe_gauche'; ...
               qmin_pied_gauche'; ...
-              qdotmin_base'; -100*ones(model.nq-6,1)]; % qdot
+              qdotmin_base'; -200*ones(model.nq-6,1)]; % qdot
 model.xmax = [qmax_base';  ... % q
               qmax_thorax'; ...
               qmax_tete'; ...
@@ -149,7 +149,7 @@ model.xmax = [qmax_base';  ... % q
               qmax_cuisse_gauche'; ...
               qmax_jambe_gauche'; ...
               qmax_pied_gauche'; ...
-              qdotmax_base';  100*ones(model.nq-6,1)]; % qdot
+              qdotmax_base';  200*ones(model.nq-6,1)]; % qdot
 
 model.umin = -100*ones(model.nu,1);
 model.umax =  100*ones(model.nu,1);

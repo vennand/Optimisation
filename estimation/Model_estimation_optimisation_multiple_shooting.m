@@ -7,7 +7,7 @@ import casadi.*
 
 data.nDoF = 42;
 
-data.Nint = 100;% number of control nodes
+data.Nint = 105;% number of control nodes
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
@@ -19,13 +19,13 @@ data.kalmanDataFile_a = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_A.mat'
 % Spécific à Do_822_contact_2.c3d
 % Le saut est entre les frames 3050 et 3386
 % data.frames = 3078:3368; % Sans contact avec la trampoline
-data.frames = 3100:3101; % Sans contact avec la trampoline, inteval plus sévère
+data.frames = 3100:3311; % Sans contact avec la trampoline, inteval plus sévère
 % data.frames = 3100:3200;
 data.labels = 1:95;
 
 data.realNint = length(data.frames);
 
-[data] = adjust_number_of_interval(data);
+data = adjust_number_of_interval(data);
 
 data.weightU = 10^-7;
 data.weightPoints = 1;
@@ -93,7 +93,7 @@ disp('Calculating Simulation')
 stats = solver.stats;
 save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
       '_U' num2str(data.weightU) '_N' num2str(data.Nint)...
-      '_IPOPTMA57.mat'],'model','data','q_opt','v_opt','u_opt','stats')
+      '_IPOPTMA57_adjusted_constraints.mat'],'model','data','q_opt','v_opt','u_opt','stats')
 % GeneratePlots(model, data, q_opt, v_opt, u_opt);
 toc
 % showmotion(model, 0:data.Duration/data.Nint:data.Duration, q_opt(:,:))

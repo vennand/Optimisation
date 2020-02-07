@@ -1,4 +1,6 @@
-fps = 0.1;%seconde
+run('../startup.m')
+
+% fps = 0.1;%seconde
 
 [N_cardinal_coor, N_markers] = size(model.markers.coordinates);
 
@@ -25,6 +27,7 @@ end
 markers_c3d = data.markers;
 
 for i=1:data.Nint+1
+    disp(['Node: ' num2str(i)])
     scatter3(markers_estim(1,:,i),markers_estim(2,:,i),markers_estim(3,:,i),'o')
     hold on
     scatter3(markers_c3d(1,:,i),markers_c3d(2,:,i),markers_c3d(3,:,i),'x')
