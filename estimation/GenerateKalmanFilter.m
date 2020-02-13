@@ -25,27 +25,21 @@ for i = 1:frame_length
     tau(:,i) = ID(model, q(:,i), v(:,i), a(:,i));
 end
 
-% Nint = data.Nint;
-% realNint = data.realNint;
-% 
-% new_q = zeros(dof, Nint+1);
-% new_v = zeros(dof, Nint+1);
-% new_a = zeros(dof, Nint+1);
-% new_tau = zeros(dof-6, Nint+1);
-% 
-% for old_value = 1:Nint+1
-%     new_value = range_conversion(old_value, Nint+1, 1, realNint, 1);
-%     
-%     new_q(:,old_value) = q(:,round(new_value));
-%     new_v(:,old_value) = v(:,round(new_value));
-%     new_a(:,old_value) = a(:,round(new_value));
-%     new_tau(:,old_value) = tau(7:end,round(new_value));
-% end
-
 new_q = q(:, 1:data.step:end);
 new_v = v(:, 1:data.step:end);
 new_a = a(:, 1:data.step:end);
 new_tau = tau(:, 1:data.step:end);
+
+% Swap rotation of arms from xyz to yxz, to correct difference in models
+% TEMPORARY!!!!
+% new_q(15:16, :) = new_q(16:-1:15, :);
+% new_q(24:25, :) = new_q(25:-1:24, :);
+% new_v(15:16, :) = new_v(16:-1:15, :);
+% new_v(24:25, :) = new_v(25:-1:24, :);
+% new_a(15:16, :) = new_a(16:-1:15, :);
+% new_a(24:25, :) = new_a(25:-1:24, :);
+% new_tau(15:16, :) = new_tau(16:-1:15, :);
+% new_tau(24:25, :) = new_tau(25:-1:24, :);
 
 % Storing data
 data.kalman_q = new_q;

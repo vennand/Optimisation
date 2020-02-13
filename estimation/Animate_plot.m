@@ -37,6 +37,7 @@ for i=1:data.Nint+1
     xlabel('x')
     ylabel('y')
     zlabel('z')
+    title(['Node: ' num2str(i)])
     drawnow
     if is_fps
         pause(fps)

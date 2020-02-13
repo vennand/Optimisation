@@ -111,7 +111,7 @@ plot(t_kalman_x,data.kalman_q(right_shoulder,:),'x');
 hold off
 title('Right shoulder positions')
 
-set(groot,'defaultAxesColorOrder', [colors(2,:); colors(1,:); colors(3,:)])
+set(groot,'defaultAxesColorOrder', colors)
 subplot(222)
 hold on
 plot(t_estim_x,q_opt(right_arm,:),'o');
@@ -148,7 +148,7 @@ plot(t_kalman_x,data.kalman_q(left_shoulder,:),'x');
 hold off
 title('Left shoulder positions')
 
-set(groot,'defaultAxesColorOrder', [colors(2,:); colors(1,:); colors(3,:)])
+set(groot,'defaultAxesColorOrder', colors)
 subplot(222)
 hold on
 plot(t_estim_x,q_opt(left_arm,:),'o');
@@ -281,7 +281,7 @@ plot(t_kalman_x,data.kalman_v(right_shoulder,:),'x');
 hold off
 title('Right shoulder velocity')
 
-set(groot,'defaultAxesColorOrder', [colors(2,:); colors(1,:); colors(3,:)])
+set(groot,'defaultAxesColorOrder', colors)
 subplot(222)
 hold on
 plot(t_estim_x,v_opt(right_arm,:),'o');
@@ -318,7 +318,7 @@ plot(t_kalman_x,data.kalman_v(left_shoulder,:),'x');
 hold off
 title('Left shoulder velocity')
 
-set(groot,'defaultAxesColorOrder', [colors(2,:); colors(1,:); colors(3,:)])
+set(groot,'defaultAxesColorOrder', colors)
 subplot(222)
 hold on
 plot(t_estim_x,v_opt(left_arm,:),'o');
@@ -432,7 +432,7 @@ plot(t_kalman_tau,data.kalman_tau(right_shoulder - base_dof,:),'x');
 hold off
 title('Right shoulder control')
 
-set(groot,'defaultAxesColorOrder', [colors(2,:); colors(1,:); colors(3,:)])
+set(groot,'defaultAxesColorOrder', colors)
 subplot(222)
 hold on
 plot(t_estim_u,u_opt(right_arm - base_dof,:),'o');
@@ -469,7 +469,7 @@ plot(t_kalman_tau,data.kalman_tau(left_shoulder - base_dof,:),'x');
 hold off
 title('Left shoulder control')
 
-set(groot,'defaultAxesColorOrder', [colors(2,:); colors(1,:); colors(3,:)])
+set(groot,'defaultAxesColorOrder', colors)
 subplot(222)
 hold on
 plot(t_estim_u,u_opt(left_arm - base_dof,:),'o');
