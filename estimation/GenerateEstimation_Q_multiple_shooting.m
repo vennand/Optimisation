@@ -5,23 +5,26 @@ T = data.Duration; % secondes
 Nint = data.Nint; % nb colloc nodes
 dN = T/Nint;
 
-if data.optimiseGravity
-    G = SX.sym('G',3);
-    model.gravity = G;
-end
-
 weightQV = vertcat(data.weightQV(1) * ones(model.nq,1), data.weightQV(2) * ones(model.nq,1));
 
 tau_base = SX.zeros(6,1);
-forDyn = @(x,u)[  x(model.idx_v)
-    FDab_Casadi( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base ,u)  )];
 x = SX.sym('x', model.nx);
 u = SX.sym('u', model.nu);
 
 L = @(x)data.weightX * ((weightQV.*x)' * (weightQV.*x));
 S = @(u)data.weightU * (u'*u);
 
-f = Function('f', {x, u}, {forDyn(x,u)});
+if data.optimiseGravity
+    G = SX.sym('G',3);
+    forDyn = @(x,u,G)[  x(model.idx_v)
+        FDab_Casadi_gravity( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base ,u), G )];
+    f = Function('f', {x, u, G}, {forDyn(x,u,G)});
+else
+    forDyn = @(x,u)[  x(model.idx_v)
+        FDab_Casadi( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base ,u)  )];
+    f = Function('f', {x, u}, {forDyn(x,u)});
+end
+
 fJx = Function('fJx', {x}, {L(x)});
 fJu = Function('fJu', {u}, {S(u)});
 
@@ -39,6 +42,10 @@ Ju = 0;
 g={};
 lbg = [];
 ubg = [];
+
+if data.optimiseGravity
+    G = MX.sym('G',3);
+end
 
 kalman_q = data.kalman_q;
 kalman_v = data.kalman_v;
@@ -63,13 +70,24 @@ for k=0:Nint-1
     
 %     Xk = RK4('x0',Xk,'p',Uk);
 %     Xk = Xk.xf;
-    for j=1:M
-        k1 = f(Xk, Uk);
-        k2 = f(Xk + DT/2 * k1, Uk);
-        k3 = f(Xk + DT/2 * k2, Uk);
-        k4 = f(Xk + DT * k3, Uk);
+    if data.optimiseGravity
+        for j=1:M
+            k1 = f(Xk, Uk, G);
+            k2 = f(Xk + DT/2 * k1, Uk, G);
+            k3 = f(Xk + DT/2 * k2, Uk, G);
+            k4 = f(Xk + DT * k3, Uk, G);
 
-        Xk=Xk+DT/6*(k1 +2*k2 +2*k3 +k4);
+            Xk=Xk+DT/6*(k1 +2*k2 +2*k3 +k4);
+        end
+    else
+        for j=1:M
+            k1 = f(Xk, Uk);
+            k2 = f(Xk + DT/2 * k1, Uk);
+            k3 = f(Xk + DT/2 * k2, Uk);
+            k4 = f(Xk + DT * k3, Uk);
+
+            Xk=Xk+DT/6*(k1 +2*k2 +2*k3 +k4);
+        end
     end
     
     Xkend = Xk;
@@ -96,8 +114,8 @@ if data.optimiseGravity
     ubw = [ubw; [ abs(bounds(5));  abs(bounds(5)); bounds(6)]];
     
     g = {g{:}, norm(G) - norm(data.gravity)};
-    lbg = [lbg; -1e-2];
-    ubg = [ubg;  1e-2];
+    lbg = [lbg; -1e-12];
+    ubg = [ubg;  1e-12];
 end
 
 Jx = vertcat(Jx{:});
