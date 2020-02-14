@@ -1,5 +1,5 @@
 % clear, clc, close all
-close all
+% close all
 % run('../startup.m')
 
 % run('/home/laboratoire/mnt/E/Bureau/Partha/GIT_S2MLib/loadS2MLib_pwd.m');
@@ -80,3 +80,5 @@ figure()
 hold on
 plot(htot_kalman(1:3,:)','.-')
 plot(htot_estim(1:3,:)','-')
+% figure()
+% plot(htot_estim(4:6,:)')

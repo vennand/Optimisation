@@ -1,4 +1,4 @@
-function [prob, lbw, ubw, lbg, ubg, objFunc, conFunc, objGrad, conGrad] = GenerateEstimation_multiple_shooting(model, data)
+function [prob, lbw, ubw, lbg, ubg, objFunc, conFunc, objGrad, conGrad] = GenerateEstimation_Q_multiple_shooting(model, data)
 import casadi.*
 
 T = data.Duration; % secondes
@@ -6,25 +6,23 @@ Nint = data.Nint; % nb colloc nodes
 dN = T/Nint;
 
 if data.optimiseGravity
-    G = MX.sym('G',3);
+    G = SX.sym('G',3);
     model.gravity = G;
 end
 
-[N_cardinal_coor, N_markers] = size(model.markers.coordinates);
+weightQV = vertcat(data.weightQV(1) * ones(model.nq,1), data.weightQV(2) * ones(model.nq,1));
 
 tau_base = SX.zeros(6,1);
 forDyn = @(x,u)[  x(model.idx_v)
     FDab_Casadi( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base ,u)  )];
 x = SX.sym('x', model.nx);
 u = SX.sym('u', model.nu);
-markers = SX.sym('markers', N_cardinal_coor, N_markers);
-is_nan  = SX.sym('is_nan', N_cardinal_coor, N_markers);
 
-L = @(x)base_referential_coor(model, x(1:model.NB)); % Estimated marker positions, not objective function
+L = @(x)data.weightX * ((weightQV.*x)' * (weightQV.*x));
 S = @(u)data.weightU * (u'*u);
 
 f = Function('f', {x, u}, {forDyn(x,u)});
-fJmarkers = Function('fJ', {x, markers, is_nan}, {data.weightPoints * objective_func(model,markers,is_nan,L(x))});
+fJx = Function('fJx', {x}, {L(x)});
 fJu = Function('fJu', {u}, {S(u)});
 
 % ode = struct('x',x,'p',u,'ode',[  x(model.idx_v)
@@ -32,25 +30,28 @@ fJu = Function('fJu', {u}, {S(u)});
 % opts = struct('t0',0,'tf',dN,'number_of_finite_elements',4);
 % RK4 = integrator('RK4','rk',ode,opts);
 
-markers = data.markers;
-is_nan = double(isnan(markers));
-
 % Start with an empty NLP
 w={};
 lbw = [];
 ubw = [];
-Jmarkers = {};
+Jx = {};
 Ju = 0;
 g={};
 lbg = [];
 ubg = [];
+
+kalman_q = data.kalman_q;
+kalman_v = data.kalman_v;
+kalman_tau = data.kalman_tau;
+
+X_kalman = vertcat(kalman_q, kalman_v);
 
 Xk = MX.sym(['X_' '0'], model.nx);
 w = {w{:}, Xk};
 lbw = [lbw; model.xmin];
 ubw = [ubw; model.xmax];
 
-Jmarkers = {Jmarkers{:}, fJmarkers(Xk, markers(:,:,1), is_nan(:,:,1))};
+Jx = {Jx{:}, fJx(X_kalman(:,1) - Xk)};
 
 M = 4;
 DT = dN/M;
@@ -80,7 +81,7 @@ for k=0:Nint-1
     lbw = [lbw; model.xmin];
     ubw = [ubw; model.xmax];
     
-    Jmarkers = {Jmarkers{:}, fJmarkers(Xk, markers(:,:,k+2), is_nan(:,:,k+2))};
+    Jx = {Jx{:}, fJx(X_kalman(:,k+2) - Xk)};
     
     g = {g{:}, Xkend - Xk};
     lbg = [lbg; zeros(model.nx,1)];
@@ -99,15 +100,15 @@ if data.optimiseGravity
     ubg = [ubg;  1e-2];
 end
 
-Jmarkers = vertcat(Jmarkers{:});
+Jx = vertcat(Jx{:});
 w = vertcat(w{:});
 g = vertcat(g{:});
-prob = struct('f', sum(Jmarkers)+Ju, 'x', w, 'g', g);
+prob = struct('f', sum(Jx)+Ju, 'x', w, 'g', g);
 
 if nargout >5
-    objFunc = Function('J',  {w}, {Jmarkers, Ju});
+    objFunc = Function('J',  {w}, {Jx, Ju});
     conFunc = Function('g',  {w}, {g});
-    objGrad = Function('dJ', {w}, {jacobian(Jmarkers,w)});
+    objGrad = Function('dJ', {w}, {jacobian(Jx,w)});
     conGrad = Function('dg', {w}, {jacobian(g,w)});
 end 
 

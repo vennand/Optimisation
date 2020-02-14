@@ -13,7 +13,7 @@ data.NLPMethod = 'MultipleShooting';
 
 data.optimiseGravity = false; % Brisé :(
 data.gravity = [0; 0; -9.81];
-data.gravityRotation = pi/16;
+data.gravityRotation = pi/32;
 
 data.dataFile = '../data/Do_822_contact_2.c3d';
 data.kalmanDataFile_q = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_Q.mat';
@@ -24,7 +24,7 @@ data.kalmanDataFile_a = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_A.mat'
 % Le saut est entre les frames 3050 et 3386
 % data.frames = 3078:3368; % Sans contact avec la trampoline
 data.frames = 3100:3311; % Sans contact avec la trampoline, interval plus sévère
-% data.frames = 3100:3200;
+% data.frames = 3100:3110;
 data.labels = 1:95;
 
 data.realNint = length(data.frames);
@@ -32,7 +32,8 @@ data.realNint = length(data.frames);
 data = adjust_number_of_interval(data);
 
 data.weightU = 1e-7;
-data.weightPoints = 1;
+data.weightX = 1;
+data.weightQV = [1; 0.1];
 
 disp('Generating Model')
 [model, data] = GenerateModel(data);
@@ -41,7 +42,7 @@ disp('Loading Kalman Filter')
 disp('Loading Real Data')
 [model, data] = GenerateRealData(model,data);
 disp('Calculating Estimation')
-[prob, lbw, ubw, lbg, ubg, objFunc, conFunc, objGrad, conGrad] = GenerateEstimation_multiple_shooting(model, data);
+[prob, lbw, ubw, lbg, ubg, objFunc, conFunc, objGrad, conGrad] = GenerateEstimation_Q_multiple_shooting(model, data);
 
 % [lbw, ubw] = GenerateInitialConstraints(model, data, lbw, ubw);
 % [lbw, ubw] = GenerateFinalConstraints(model, data, lbw, ubw);
@@ -51,7 +52,7 @@ options.ipopt.max_iter = 3000;
 options.ipopt.print_level = 5;
 options.ipopt.linear_solver = 'ma57';
 
-options.ipopt.tol = 1e-5; % default: 1e-08
+options.ipopt.tol = 1e-6; % default: 1e-08
 % options.ipopt.acceptable_tol = 1e-4; % default: 1e-06
 options.ipopt.constr_viol_tol = 0.001; % default: 0.0001
 % options.ipopt.acceptable_constr_viol_tol = 0.1; % default: 0.01
@@ -106,7 +107,7 @@ disp('Calculating Simulation')
 stats = solver.stats;
 save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
       '_U' num2str(data.weightU) '_N' num2str(data.Nint)...
-      '_IPOPTMA57_adjusted_constraints_on_U.mat'],'model','data','q_opt','v_opt','u_opt','stats')
+      '_IPOPTMA57_Q.mat'],'model','data','q_opt','v_opt','u_opt','stats')
 % GeneratePlots(model, data, q_opt, v_opt, u_opt);
 toc
 % showmotion(model, 0:data.Duration/data.Nint:data.Duration, q_opt(:,:))
