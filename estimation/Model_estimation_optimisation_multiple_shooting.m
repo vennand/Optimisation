@@ -11,9 +11,12 @@ data.Nint = 50;% number of control nodes
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
-data.optimiseGravity = true;
+data.optimiseGravity = false;
 data.gravity = [0; 0; -9.81];
-data.gravityRotation = pi/32;
+data.gravityRotationBound = pi/32;
+
+data.optimiseInertia = false; % In construction
+data.inertiaTorsoRelativeBound = 0.1;
 
 data.dataFile = '../data/Do_822_contact_2.c3d';
 data.kalmanDataFile_q = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_Q.mat';
@@ -107,13 +110,15 @@ data.q_opt = q_opt;
 data.v_opt = v_opt;
 data.u_opt = u_opt;
 
-disp('Calculating Simulation')
-[model, data] = GenerateSimulation(model, data);
+% disp('Calculating Simulation')
+% [model, data] = GenerateSimulation(model, data);
 
 stats = solver.stats;
 save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
       '_U' num2str(data.weightU) '_N' num2str(data.Nint)...
       '_IPOPTMA57_optimised_gravity.mat'],'model','data','q_opt','v_opt','u_opt','stats')
 % GeneratePlots(model, data, q_opt, v_opt, u_opt);
+% CalculateMomentum(model, data);
+% AnimatePlot(model, data, 'sol', 'mocap');
 toc
 % showmotion(model, 0:data.Duration/data.Nint:data.Duration, q_opt(:,:))

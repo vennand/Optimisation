@@ -106,15 +106,18 @@ for k=0:Nint-1
 end
 
 if data.optimiseGravity
-    bounds = rotx(data.gravityRotation) * vertcat([0;0;0],data.gravity);
+    bounds = rotx(data.gravityRotationBound) * vertcat([0;0;0],data.gravity);
     
     w = {w{:}, G};
     lbw = [lbw; [-abs(bounds(5)); -abs(bounds(5)); data.gravity(3)]];
     ubw = [ubw; [ abs(bounds(5));  abs(bounds(5)); bounds(6)]];
     
-    g = {g{:}, norm(G) - norm(data.gravity)};
-    lbg = [lbg; -1e-2];
-    ubg = [ubg;  1e-2];
+    g = {g{:}, G'*G - data.gravity(:)' * data.gravity(:)};
+    lbg = [lbg; -1e-3];
+    ubg = [ubg;  1e-3];
+end
+if data.optimiseInertia
+    bounds = data.inertiaTorsoRelativeBound;
 end
 
 Jmarkers = vertcat(Jmarkers{:});

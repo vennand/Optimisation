@@ -30,22 +30,18 @@ new_v = v(:, 1:data.step:end);
 new_a = a(:, 1:data.step:end);
 new_tau = tau(:, 1:data.step:end);
 
-% Swap rotation of arms from xyz to yxz, to correct difference in models
-% TEMPORARY!!!!
-% new_q(15:16, :) = new_q(16:-1:15, :);
-% new_q(24:25, :) = new_q(25:-1:24, :);
-% new_v(15:16, :) = new_v(16:-1:15, :);
-% new_v(24:25, :) = new_v(25:-1:24, :);
-% new_a(15:16, :) = new_a(16:-1:15, :);
-% new_a(24:25, :) = new_a(25:-1:24, :);
-% new_tau(15:16, :) = new_tau(16:-1:15, :);
-% new_tau(24:25, :) = new_tau(25:-1:24, :);
+% TEST TEST TEST
+load('Solutions/Do_822_F3100-3311_U1e-07_N105_IPOPTMA57_Q.mat', 'q_opt', 'v_opt', 'u_opt')
 
 % Storing data
 data.kalman_q = new_q;
 data.kalman_v = new_v;
 data.kalman_a = new_a;
 data.kalman_tau = new_tau(7:end,1:end-1);
+% data.kalman_q = q_opt;
+% data.kalman_v = v_opt;
+% data.kalman_a = new_a;
+% data.kalman_tau = u_opt;
 
 data.kalman_qFull = q;
 data.kalman_vFull = v;

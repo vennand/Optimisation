@@ -1,3 +1,4 @@
+function [] = CalculateMomentum(model, data)
 % clear, clc, close all
 % close all
 % run('../startup.m')
@@ -59,7 +60,7 @@ end
 
 htot_estim = [];
 for i = 1:data.Nint+1
-ret = EnerMo( model, q_opt(:,i), v_opt(:,i) );
+ret = EnerMo( model, data.q_opt(:,i), data.v_opt(:,i) );
 htot_i = ret.htot;
 % htot_i(1:3) = ret.htot(1:3) - ret.mass * cross(ret.cm, ret.vcm);
 htot_i(1:3) = ret.htot(1:3) - cross(ret.cm, ret.htot(4:6));
@@ -82,3 +83,5 @@ plot(htot_kalman(1:3,:)','.-')
 plot(htot_estim(1:3,:)','-')
 % figure()
 % plot(htot_estim(4:6,:)')
+
+end
