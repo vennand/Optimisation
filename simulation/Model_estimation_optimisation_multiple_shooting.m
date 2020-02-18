@@ -4,7 +4,7 @@ clear, clc, close all
 run('startup.m')
 import casadi.*
 
-data.nDoF = 42;
+data.nDoF = 9;
 
 data.Duration = 1; % Time horizon
 data.Nint = 3;% number of control nodes
@@ -58,7 +58,12 @@ for i=1:model.nu
     u_opt(i,:) = w_opt(i+model.nx:model.nx+model.nu:end)';
 end
 
-GeneratePlots(model, data, q_opt, v_opt, u_opt);
+data.q_opt = q_opt;
+data.v_opt = v_opt;
+data.u_opt = u_opt;
+
+% GeneratePlots(model, data);
+% CalculateMomentum(model, data);
 
 % showmotion(model, 0:data.Duration/data.Nint:data.Duration, q_opt(:,:))
 % showmotion(model, 0:data.Duration/data.Nint:data.Duration, data.xFull(1:model.nq,:))

@@ -30,18 +30,39 @@ new_v = v(:, 1:data.step:end);
 new_a = a(:, 1:data.step:end);
 new_tau = tau(:, 1:data.step:end);
 
-% TEST TEST TEST
-load('Solutions/Do_822_F3100-3311_U1e-07_N105_IPOPTMA57_Q.mat', 'q_opt', 'v_opt', 'u_opt')
-
-% Storing data
-data.kalman_q = new_q;
-data.kalman_v = new_v;
-data.kalman_a = new_a;
-data.kalman_tau = new_tau(7:end,1:end-1);
-% data.kalman_q = q_opt;
-% data.kalman_v = v_opt;
-% data.kalman_a = new_a;
-% data.kalman_tau = u_opt;
+if data.optimisedKalman
+    optimisedKalman_filename = ['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
+                                '_U' num2str(data.weightU) '_N' num2str(data.Nint) ...
+                                '_weightQV' num2str(1) '-' num2str(0.01) ...
+                                '_optimiseGravity=' num2str(data.optimisedKalmanGravity) ...
+                                '_gravityRotationBound=' num2str(data.gravityRotationBound) ...
+                                '_IPOPTMA57_Q.mat'];
+    if isfile(optimisedKalman_filename)
+        data_kalman = load(optimisedKalman_filename, 'data');
+        data_kalman = data_kalman.('data');
+    else
+        error('No EKF found O.o')
+    end
+    
+    % Storing data
+    data.kalman_q = data_kalman.q_opt;
+    data.kalman_v = data_kalman.v_opt;
+    data.kalman_tau = data_kalman.u_opt;
+    
+    data.kalman_qUnoptimised = new_q;
+    data.kalman_vUnoptimised = new_v;
+    data.kalman_aUnoptimised = new_a;
+    data.kalman_tauUnoptimised = new_tau(7:end,1:end-1);
+    
+    if data.optimisedKalmanGravity
+        data.gravity = data_kalman.G_opt;
+    end
+else
+    data.kalman_q = new_q;
+    data.kalman_v = new_v;
+    data.kalman_a = new_a;
+    data.kalman_tau = new_tau(7:end,1:end-1);
+end
 
 data.kalman_qFull = q;
 data.kalman_vFull = v;

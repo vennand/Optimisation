@@ -1,4 +1,9 @@
 function [] = CalculateMomentum(model, data)
+
+T = data.Duration; % secondes
+Nint = data.Nint; % nb colloc nodes
+dN = T/Nint;
+
 % clear, clc, close all
 % close all
 % run('../startup.m')
@@ -39,34 +44,37 @@ V2(24:25, :) = V2(25:-1:24, :);
 htot_full = [];
 htot_kalman_full = [];
 for i = 1:3750
-ret = EnerMo( model, Q2(:,i), V2(:,i) );
-htot_i = ret.htot;
-% htot_i(1:3) = ret.htot(1:3) - ret.mass * cross(ret.cm, ret.vcm);
-htot_i(1:3) = ret.htot(1:3) - cross(ret.cm, ret.htot(4:6));
-htot_full = [htot_full ret.htot];
-htot_kalman_full = [htot_kalman_full htot_i];
+    ret = EnerMo( model, Q2(:,i), V2(:,i) );
+    htot_i = ret.htot;
+    % htot_i(1:3) = ret.htot(1:3) - ret.mass * cross(ret.cm, ret.vcm);
+    htot_i(1:3) = ret.htot(1:3) - cross(ret.cm, ret.htot(4:6));
+    htot_full = [htot_full ret.htot];
+    htot_kalman_full = [htot_kalman_full htot_i];
 end
 
 htot = [];
 htot_kalman = [];
 for i = 1:data.Nint+1
-ret = EnerMo( model, data.kalman_q(:,i), data.kalman_v(:,i) );
-htot_i = ret.htot;
-% htot_i(1:3) = ret.htot(1:3) - ret.mass * cross(ret.cm, ret.vcm);
-htot_i(1:3) = ret.htot(1:3) - cross(ret.cm, ret.htot(4:6));
-htot = [htot ret.htot];
-htot_kalman = [htot_kalman htot_i];
+    ret = EnerMo( model, data.kalman_q(:,i), data.kalman_v(:,i) );
+    htot_i = ret.htot;
+    % htot_i(1:3) = ret.htot(1:3) - ret.mass * cross(ret.cm, ret.vcm);
+    htot_i(1:3) = ret.htot(1:3) - cross(ret.cm, ret.htot(4:6));
+    % htot = [htot ret.htot];
+    htot_kalman = [htot_kalman htot_i];
 end
 
 htot_estim = [];
 for i = 1:data.Nint+1
-ret = EnerMo( model, data.q_opt(:,i), data.v_opt(:,i) );
-htot_i = ret.htot;
-% htot_i(1:3) = ret.htot(1:3) - ret.mass * cross(ret.cm, ret.vcm);
-htot_i(1:3) = ret.htot(1:3) - cross(ret.cm, ret.htot(4:6));
-% htot = [htot ret.htot];
-htot_estim = [htot_estim htot_i];
+    ret = EnerMo( model, data.q_opt(:,i), data.v_opt(:,i) );
+    htot_i = ret.htot;
+    % htot_i(1:3) = ret.htot(1:3) - ret.mass * cross(ret.cm, ret.vcm);
+    htot_i(1:3) = ret.htot(1:3) - cross(ret.cm, ret.htot(4:6));
+    % htot = [htot ret.htot];
+    htot_estim = [htot_estim htot_i];
 end
+
+htot_kalman_slope = (htot_kalman(:,2:end) - htot_kalman(:,1:end-1))/ret.mass/dN;
+htot_estim_slope = (htot_estim(:,2:end) - htot_estim(:,1:end-1))/ret.mass/dN;
 
 colors = [[1, 0, 0]; [0, 0.5, 0]; [0, 0, 1]];
 set(groot,'defaultAxesColorOrder', colors)
@@ -81,7 +89,18 @@ figure()
 hold on
 plot(htot_kalman(1:3,:)','.-')
 plot(htot_estim(1:3,:)','-')
-% figure()
-% plot(htot_estim(4:6,:)')
+figure()
+hold on
+plot(htot_estim(4:6,:)')
+plot(htot_kalman(4:6,:)','.-')
+
+figure()
+hold on
+plot(htot_estim_slope(1:3,:)')
+plot(htot_kalman_slope(1:3,:)','.-')
+figure()
+hold on
+plot(htot_estim_slope(4:6,:)')
+plot(htot_kalman_slope(4:6,:)','.-')
 
 end

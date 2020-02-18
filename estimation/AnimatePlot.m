@@ -25,6 +25,14 @@ switch cloud1
         end
         markers_cloud1 = kalman_markers;
         disp(['Kalman cloud' blanks(4) 'o'])
+    case 'kalmanUnopti'
+        kalman_markers = zeros(N_cardinal_coor,N_markers,data.Nint+1);
+        kalman_q = data.kalman_qUnoptimised;
+        for i=1:data.Nint+1
+            kalman_markers(:,:,i) = base_referential_coor(model, kalman_q(:,i));
+        end
+        markers_cloud1 = kalman_markers;
+        disp(['Kalman unoptimised cloud' blanks(4) 'o'])
     case 'mocap'
         markers_cloud1 = data.markers;
         disp(['Mocap cloud' blanks(4) 'o'])
@@ -33,7 +41,7 @@ switch cloud1
         disp(['Simulation cloud' blanks(4) 'o'])
     otherwise
         disp('No such dataset, n00b!')
-        disp('Options are: sol, kalman, mocap, sim')
+        disp('Options are: sol, kalman, kalmanUnopti, mocap, sim')
 end
 
 switch cloud2
@@ -52,6 +60,14 @@ switch cloud2
         end
         markers_cloud2 = kalman_markers;
         disp(['Kalman cloud' blanks(4) 'x'])
+    case 'kalmanUnopti'
+        kalman_markers = zeros(N_cardinal_coor,N_markers,data.Nint+1);
+        kalman_q = data.kalman_qUnoptimised;
+        for i=1:data.Nint+1
+            kalman_markers(:,:,i) = base_referential_coor(model, kalman_q(:,i));
+        end
+        markers_cloud1 = kalman_markers;
+        disp(['Kalman unoptimised cloud' blanks(4) 'o'])
     case 'mocap'
         markers_cloud2 = data.markers;
         disp(['Mocap cloud' blanks(4) 'x'])
@@ -60,7 +76,7 @@ switch cloud2
         disp(['Simulation cloud' blanks(4) 'x'])
     otherwise
         disp('No such dataset, n00b!')
-        disp('Options are: sol, kalman, mocap, sim')
+        disp('Options are: sol, kalman, kalmanUnopti, mocap, sim')
 end
 
 for i=1:data.Nint+1

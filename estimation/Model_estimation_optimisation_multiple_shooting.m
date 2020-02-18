@@ -23,6 +23,9 @@ data.kalmanDataFile_q = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_Q.mat'
 data.kalmanDataFile_v = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_V.mat';
 data.kalmanDataFile_a = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_A.mat';
 
+data.optimisedKalman = true;
+data.optimisedKalmanGravity = true;
+
 % Spécific à Do_822_contact_2.c3d
 % Le saut est entre les frames 3050 et 3386
 % data.frames = 3078:3368; % Sans contact avec la trampoline
@@ -115,8 +118,9 @@ data.u_opt = u_opt;
 
 stats = solver.stats;
 save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
-      '_U' num2str(data.weightU) '_N' num2str(data.Nint)...
-      '_IPOPTMA57_optimised_gravity.mat'],'model','data','q_opt','v_opt','u_opt','stats')
+      '_U' num2str(data.weightU) '_N' num2str(data.Nint) ...
+      '_optimisedKalman=' num2str(data.optimisedKalman) '_optimisedKalmanGravity' num2str(data.optimisedKalmanGravity) ...
+      '_IPOPTMA57_.mat'],'model','data','stats')
 % GeneratePlots(model, data, q_opt, v_opt, u_opt);
 % CalculateMomentum(model, data);
 % AnimatePlot(model, data, 'sol', 'mocap');

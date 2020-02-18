@@ -13,8 +13,8 @@ forDyn = @(x,u)[  x(model.idx_v)
     FDab_Casadi( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base ,u)  )];
 x = SX.sym('x', model.nx,1);
 u = SX.sym('u', model.nu,1);
-markers = SX.sym('markers', N_cardinal_coor * N_markers);
-is_nan  = SX.sym('markers', N_cardinal_coor * N_markers);
+markers = SX.sym('markers', N_cardinal_coor, N_markers);
+is_nan  = SX.sym('markers', N_cardinal_coor, N_markers);
 
 L = @(x)base_referential_coor(model, x(1:model.NB)); % Estimated marker positions, not objective function
 S = @(u)data.weightU * (u'*u);
@@ -40,7 +40,7 @@ w = {w{:}, Xk};
 lbw = [lbw; model.xmin];
 ubw = [ubw; model.xmax];
 
-J = J + fJmarkers(Xk, markers(1,:), is_nan(1,:));
+J = J + fJmarkers(Xk, markers(:,:,1), is_nan(:,:,1));
 
 M = 4;
 DT = dN/M;
@@ -62,7 +62,7 @@ for k=0:Nint-1
     Xkend = Xk;
     
     J = J + fJu(Uk);
-    J = J + fJmarkers(Xk, markers(k+2,:), is_nan(k+2,:));
+    J = J + fJmarkers(Xk, markers(:,:,k+2), is_nan(:,:,k+2));
     
     Xk = MX.sym(['X_' num2str(k+1)], model.nx);
     w = {w{:}, Xk};
@@ -76,24 +76,4 @@ end
 
 prob = struct('f', J, 'x', vertcat(w{:}), 'g', vertcat(g{:}));
 
-end
-
-% Defined to be inside a CasADi function
-function J = objective_func(model,markers,is_nan,estimated_markers)
-J = 0;
-
-[N_cardinal_coor, N_markers] = size(model.markers.coordinates);
-
-n = 0;
-for m = 1:N_markers
-    distance_between_points = 0;
-    for l = 1:N_cardinal_coor
-        n = n + 1;
-        distance_between_points = ...
-            if_else(is_nan(n), ...
-            distance_between_points, ...
-            distance_between_points + (markers(n) - estimated_markers{n}).^2);
-    end
-    J = J + 0.5 * distance_between_points;
-end
 end
