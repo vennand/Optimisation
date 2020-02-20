@@ -7,13 +7,14 @@ import casadi.*
 
 data.nDoF = 42;
 
-data.Nint = 50;% number of control nodes
+data.Nint = 105;% number of control nodes
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
 data.optimiseGravity = false;
 data.gravity = [0; 0; -9.81];
-data.gravityRotationBound = pi/32;
+data.gravityZBound = data.gravity;
+data.gravityRotationBound = pi/16;
 
 data.optimiseInertia = false; % In construction
 data.inertiaTorsoRelativeBound = 0.1;
@@ -29,7 +30,7 @@ data.optimisedKalmanGravity = true;
 % Spécific à Do_822_contact_2.c3d
 % Le saut est entre les frames 3050 et 3386
 % data.frames = 3078:3368; % Sans contact avec la trampoline
-data.frames = 3100:3300; % Sans contact avec la trampoline, interval plus sévère
+data.frames = 3100:3311; % Sans contact avec la trampoline, interval plus sévère
 % data.frames = 3100:3200;
 data.labels = 1:95;
 
@@ -119,7 +120,10 @@ data.u_opt = u_opt;
 stats = solver.stats;
 save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
       '_U' num2str(data.weightU) '_N' num2str(data.Nint) ...
-      '_optimisedKalman=' num2str(data.optimisedKalman) '_optimisedKalmanGravity' num2str(data.optimisedKalmanGravity) ...
+      '_optimiseGravity=' num2str(data.optimiseGravity) ...
+      '_gravityRotationBound=' num2str(data.gravityRotationBound) ...
+      '_optimisedKalman=' num2str(data.optimisedKalman) ...
+      '_optimisedKalmanGravity' num2str(data.optimisedKalmanGravity) ...
       '_IPOPTMA57_.mat'],'model','data','stats')
 % GeneratePlots(model, data, q_opt, v_opt, u_opt);
 % CalculateMomentum(model, data);

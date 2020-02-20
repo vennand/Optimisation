@@ -106,15 +106,15 @@ for k=0:Nint-1
 end
 
 if data.optimiseGravity
-    bounds = rotx(data.gravityRotationBound) * vertcat([0;0;0],data.gravity);
+    bounds = rotx(data.gravityRotationBound) * vertcat([0;0;0],data.gravityZBound);
     
     w = {w{:}, G};
-    lbw = [lbw; [-abs(bounds(5)); -abs(bounds(5)); data.gravity(3)]];
+    lbw = [lbw; [-abs(bounds(5)); -abs(bounds(5)); data.gravityZBound(3)]];
     ubw = [ubw; [ abs(bounds(5));  abs(bounds(5)); bounds(6)]];
     
-    g = {g{:}, G'*G - data.gravity(:)' * data.gravity(:)};
-    lbg = [lbg; -1e-3];
-    ubg = [ubg;  1e-3];
+    g = {g{:}, G'*G - data.gravityZBound(:)' * data.gravityZBound(:)};
+    lbg = [lbg; -1e-12];
+    ubg = [ubg;  1e-12];
 end
 if data.optimiseInertia
     bounds = data.inertiaTorsoRelativeBound;

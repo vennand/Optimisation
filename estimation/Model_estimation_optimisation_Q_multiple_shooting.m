@@ -7,7 +7,7 @@ import casadi.*
 
 data.nDoF = 42;
 
-data.Nint = 105;% number of control nodes
+data.Nint = 50;% number of control nodes
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
@@ -15,7 +15,7 @@ data.optimiseGravity = false;
 data.gravity = [0; 0; -9.81];
 data.gravityRotationBound = pi/16;
 
-data.optimiseInertia = false; % In construction
+data.optimiseInertia = true; % In construction
 data.inertiaRelativeBound = [0.1; 0.1; 0.1; 0.1]; % pelvis, thorax, right thigh, left thigh
 
 data.dataFile = '../data/Do_822_contact_2.c3d';
@@ -29,8 +29,8 @@ data.optimisedKalman = false;
 % Spécific à Do_822_contact_2.c3d
 % Le saut est entre les frames 3050 et 3386
 % data.frames = 3078:3368; % Sans contact avec la trampoline
-data.frames = 3100:3311; % Sans contact avec la trampoline, interval plus sévère
-% data.frames = 3100:3300;
+% data.frames = 3100:3311; % Sans contact avec la trampoline, interval plus sévère
+data.frames = 3100:3300;
 data.labels = 1:95;
 
 data.realNint = length(data.frames);
@@ -63,24 +63,28 @@ options.ipopt.tol = 1e-6; % default: 1e-08
 options.ipopt.constr_viol_tol = 0.001; % default: 0.0001
 % options.ipopt.acceptable_constr_viol_tol = 0.1; % default: 0.01
 
-% options.ipopt.hessian_approximation = 'limited-memory';
-
 disp('Generating Solver')
 % solver = nlpsol('solver', 'snopt', prob, options); % FAIRE MARCHER ÇA
 solver = nlpsol('solver', 'ipopt', prob, options);
 
 w0=[];
 for k=1:data.Nint
-%     w0 = [w0;  data.x0];
-    w0 = [w0;  data.kalman_q(:,k); data.kalman_v(:,k)];
-%     w0 = [w0;  data.u0];
-    w0 = [w0;  data.kalman_tau(:,k)];
+    w0 = [w0; data.kalman_q(:,k); data.kalman_v(:,k)];
+    w0 = [w0; data.kalman_tau(:,k)];
 end
-% w0 = [w0;  data.x0];
-w0 = [w0;  data.kalman_q(:,data.Nint+1); data.kalman_v(:,data.Nint+1)];
+w0 = [w0; data.kalman_q(:,data.Nint+1); data.kalman_v(:,data.Nint+1)];
 
 if data.optimiseGravity
-    w0 = [w0;  data.gravity];
+    N_G = size(data.gravity);
+    w0 = [w0; data.gravity];
+end
+if data.optimiseInertia
+    N_mass = size(data.initialMass);
+    w0 = [w0; data.initialMass];
+    
+    [N_segment, N_cardinal_coor] = size(data.initialCoM);
+    N_CoM = N_segment * N_cardinal_coor;
+    w0 = [w0; reshape(data.initialCoM',[N_CoM,1])];
 end
 
 sol = solver('x0', w0, 'lbx', lbw, 'ubx', ubw, 'lbg', lbg, 'ubg', ubg);
@@ -90,16 +94,52 @@ v_opt = nan(model.nq,data.Nint+1);
 u_opt = nan(model.nu,data.Nint);
 w_opt = full(sol.x);
 
-if data.optimiseGravity
+if data.optimiseGravity && data.optimiseInertia
+    N_extras = N_G + N_mass + N_CoM;
+    
     for i=1:model.nq
-        q_opt(i,:) = w_opt(i:model.nx+model.nu:end-3)';
-        v_opt(i,:) = w_opt(i+model.nq:model.nx+model.nu:end-3)';
+        q_opt(i,:) = w_opt(i:model.nx+model.nu:end - N_extras)';
+        v_opt(i,:) = w_opt(i+model.nq:model.nx+model.nu:end - N_extras)';
     end
     for i=1:model.nu
-        u_opt(i,:) = w_opt(i+model.nx:model.nx+model.nu:end-3)';
+        u_opt(i,:) = w_opt(i+model.nx:model.nx+model.nu:end - N_extras)';
     end
-    G_opt = w_opt(end-2:end);
+    G_opt = w_opt(end - N_extras + 1:end - N_extras + N_G);
+    
+    mass_opt = w_opt(end - N_extras + N_G + 1:end - N_extras + N_G + N_mass);
+    
+    CoM_opt = reshape(w_opt(end - N_CoM + 1:end),[N_cardinal_coor, N_segment])';
+    
     data.G_opt = G_opt;
+    data.mass_opt = mass_opt;
+    data.CoM_opt = CoM_opt;
+elseif data.optimiseGravity
+    N_extras = N_G;
+    for i=1:model.nq
+        q_opt(i,:) = w_opt(i:model.nx+model.nu:end - N_extras)';
+        v_opt(i,:) = w_opt(i+model.nq:model.nx+model.nu:end - N_extras)';
+    end
+    for i=1:model.nu
+        u_opt(i,:) = w_opt(i+model.nx:model.nx+model.nu:end - N_extras)';
+    end
+    G_opt = w_opt(end - N_extras + 1:end);
+    
+    data.G_opt = G_opt;
+elseif data.optimiseInertia
+    N_extras = N_mass + N_CoM;
+    for i=1:model.nq
+        q_opt(i,:) = w_opt(i:model.nx+model.nu:end - N_extras)';
+        v_opt(i,:) = w_opt(i+model.nq:model.nx+model.nu:end - N_extras)';
+    end
+    for i=1:model.nu
+        u_opt(i,:) = w_opt(i+model.nx:model.nx+model.nu:end - N_extras)';
+    end
+    mass_opt = w_opt(end - N_extras + 1:end - N_extras + N_mass);
+    
+    CoM_opt = reshape(w_opt(end - N_CoM + 1:end),[N_cardinal_coor, N_segment])';
+    
+    data.mass_opt = mass_opt;
+    data.CoM_opt = CoM_opt;
 else
     for i=1:model.nq
         q_opt(i,:) = w_opt(i:model.nx+model.nu:end)';
@@ -121,7 +161,10 @@ stats = solver.stats;
 save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
       '_U' num2str(data.weightU) '_N' num2str(data.Nint) ...
       '_weightQV' num2str(data.weightQV(1)) '-' num2str(data.weightQV(2)) ...
-      '_optimiseGravity=' num2str(data.optimiseGravity) '_gravityRotationBound=' num2str(data.gravityRotationBound) ...
+      '_optimiseGravity=' num2str(data.optimiseGravity) ...
+      '_gravityRotationBound=' num2str(data.gravityRotationBound) ...
+      '_optimiseInertia=' num2str(data.optimiseInertia) ...
+      '_inertiaRelativeBound=' strrep(num2str(data.inertiaRelativeBound'), '  ', '-') ...
       '_IPOPTMA57_Q.mat'],'model','data','stats')
 % GeneratePlots(model, data);
 % CalculateMomentum(model, data);
