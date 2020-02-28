@@ -7,16 +7,17 @@ import casadi.*
 
 data.nDoF = 42;
 
-data.Nint = 50;% number of control nodes
+data.Nint = 50;% number of control nodesl
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
-data.optimiseGravity = false;
+data.optimiseGravity = true;
 data.gravity = [0; 0; -9.81];
 data.gravityRotationBound = pi/16;
 
-data.optimiseInertia = true; % In construction
-data.inertiaRelativeBound = [0.1; 0.1; 0.1; 0.1]; % pelvis, thorax, right thigh, left thigh
+data.optimiseInertia = true;
+data.inertiaRelativeBound = [0; 0.3; 0; 0]; % pelvis, thorax, right thigh, left thigh
+data.nSegment = 4; data.nCardinalCoor = 3;
 
 data.dataFile = '../data/Do_822_contact_2.c3d';
 data.kalmanDataFile_q = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_Q.mat';
@@ -47,6 +48,8 @@ disp('Loading Kalman Filter')
 [model, data] = GenerateKalmanFilter(model,data);
 disp('Loading Real Data')
 [model, data] = GenerateRealData(model,data);
+disp('Initialize Estimation')
+data = saveInitialValues(model, data);
 disp('Calculating Estimation')
 [prob, lbw, ubw, lbg, ubg, objFunc, conFunc, objGrad, conGrad] = GenerateEstimation_Q_multiple_shooting(model, data);
 
@@ -75,15 +78,14 @@ end
 w0 = [w0; data.kalman_q(:,data.Nint+1); data.kalman_v(:,data.Nint+1)];
 
 if data.optimiseGravity
-    N_G = size(data.gravity);
+    N_G = data.nCardinalCoor;
     w0 = [w0; data.gravity];
 end
 if data.optimiseInertia
-    N_mass = size(data.initialMass);
+    N_mass = data.nSegment;
     w0 = [w0; data.initialMass];
     
-    [N_segment, N_cardinal_coor] = size(data.initialCoM);
-    N_CoM = N_segment * N_cardinal_coor;
+    N_CoM = data.nSegment * data.nCardinalCoor;
     w0 = [w0; reshape(data.initialCoM',[N_CoM,1])];
 end
 
@@ -108,7 +110,7 @@ if data.optimiseGravity && data.optimiseInertia
     
     mass_opt = w_opt(end - N_extras + N_G + 1:end - N_extras + N_G + N_mass);
     
-    CoM_opt = reshape(w_opt(end - N_CoM + 1:end),[N_cardinal_coor, N_segment])';
+    CoM_opt = reshape(w_opt(end - N_CoM + 1:end),[data.nCardinalCoor, data.nSegment])';
     
     data.G_opt = G_opt;
     data.mass_opt = mass_opt;
@@ -136,7 +138,7 @@ elseif data.optimiseInertia
     end
     mass_opt = w_opt(end - N_extras + 1:end - N_extras + N_mass);
     
-    CoM_opt = reshape(w_opt(end - N_CoM + 1:end),[N_cardinal_coor, N_segment])';
+    CoM_opt = reshape(w_opt(end - N_CoM + 1:end),[data.nCardinalCoor, data.nSegment])';
     
     data.mass_opt = mass_opt;
     data.CoM_opt = CoM_opt;

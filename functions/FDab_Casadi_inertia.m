@@ -4,10 +4,10 @@ function [qdd] = FDab_Casadi_inertia(model, q, qd, tau, M, CoM, I)
     right_thigh = 33;
     left_thigh = 39;
     
-    model.I{pelvis} = mcI([M(1),CoM(1,:),I(1,:,:)]);
-    model.I{thorax} = mcI([M(2),CoM(2,:),I(2,:,:)]);
-    model.I{right_thigh} = mcI([M(3),CoM(3,:),I(3,:,:)]);
-    model.I{left_thigh} = mcI([M(4),CoM(4,:),I(4,:,:)]);
+    model.I{pelvis} = mcI_Casadi(M(1),CoM(1,:),squeeze(I(1,:,:)));
+    model.I{thorax} = mcI_Casadi(M(2),CoM(2,:),squeeze(I(2,:,:)));
+    model.I{right_thigh} = mcI_Casadi(M(3),CoM(3,:),squeeze(I(3,:,:)));
+    model.I{left_thigh} = mcI_Casadi(M(4),CoM(4,:),squeeze(I(4,:,:)));
     
     qdd = FDab_Casadi(model, q, qd, tau);
 end

@@ -7,23 +7,10 @@ dN = T/Nint;
 
 weightQV = vertcat(data.weightQV(1) * ones(model.nq,1), data.weightQV(2) * ones(model.nq,1));
 
+N_cardinal_coor = data.nCardinalCoor;
+N_segment = data.nSegment;
 if data.optimiseInertia
-    mass = zeros(4,1);
-    CoM = zeros(4,3);
-    I = zeros(4,3,3);
-    
-    pelvis = 6;
-    thorax = 9;
-    right_thigh = 33;
-    left_thigh = 39;
-
-    [mass(1),CoM(1,:),I(1,:,:)] = mcI(model.I{pelvis});
-    [mass(2),CoM(2,:),I(2,:,:)] = mcI(model.I{thorax});
-    [mass(3),CoM(3,:),I(3,:,:)] = mcI(model.I{right_thigh});
-    [mass(4),CoM(4,:),I(4,:,:)] = mcI(model.I{left_thigh});
-    
-    data.initialMass = mass;
-    data.initialCoM = CoM;
+    I = data.initialInertia;
 end
 
 tau_base = SX.zeros(6,1);
@@ -34,21 +21,21 @@ L = @(x)data.weightX * ((weightQV.*x)' * (weightQV.*x));
 S = @(u)data.weightU * (u'*u);
 
 if data.optimiseGravity && data.optimiseInertia
-    G = SX.sym('G',3);
-    mass = SX.sym('G',4);
-    CoM = SX.sym('G',4,3);
-    forDyn = @(x,u,G)[  x(model.idx_v)
+    G = SX.sym('G',N_cardinal_coor);
+    mass = SX.sym('M',N_segment);
+    CoM = SX.sym('CoM',N_segment,N_cardinal_coor);
+    forDyn = @(x,u,G,mass,CoM)[  x(model.idx_v)
         FDab_Casadi_gravity_inertia( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base ,u), G, mass, CoM, I )];
     f = Function('f', {x, u, G, mass, CoM}, {forDyn(x,u,G,mass,CoM)});
 elseif data.optimiseGravity
-    G = SX.sym('G',3);
+    G = SX.sym('G',N_cardinal_coor);
     forDyn = @(x,u,G)[  x(model.idx_v)
         FDab_Casadi_gravity( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base ,u), G )];
     f = Function('f', {x, u, G}, {forDyn(x,u,G)});
 elseif data.optimiseInertia
-    mass = SX.sym('G',4);
-    CoM = SX.sym('G',4,3);
-    forDyn = @(x,u,G)[  x(model.idx_v)
+    mass = SX.sym('M',N_segment);
+    CoM = SX.sym('CoM',N_segment,N_cardinal_coor);
+    forDyn = @(x,u,mass,CoM)[  x(model.idx_v)
         FDab_Casadi_inertia( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base ,u), mass, CoM, I )];
     f = Function('f', {x, u, mass, CoM}, {forDyn(x,u,mass,CoM)});
 else
@@ -76,16 +63,16 @@ lbg = [];
 ubg = [];
 
 if data.optimiseGravity
-    G = MX.sym('G',3);
+    G = MX.sym('G',N_cardinal_coor);
 end
 if data.optimiseInertia
-    mass = MX.sym('G',4);
-    CoM = MX.sym('G',4,3);
+    mass = MX.sym('M',N_segment);
+    CoM = MX.sym('CoM',N_segment*N_cardinal_coor,1);
+    CoM = reshape(CoM,N_cardinal_coor,N_segment)';
 end
 
 kalman_q = data.kalman_q;
 kalman_v = data.kalman_v;
-kalman_tau = data.kalman_tau;
 
 X_kalman = vertcat(kalman_q, kalman_v);
 
@@ -178,17 +165,18 @@ if data.optimiseInertia
     lbw = [lbw; data.initialMass - mass_bounds];
     ubw = [ubw; data.initialMass + mass_bounds];
     
-    [N_segment, N_cardinal_coor] = size(data.initialCoM);
-    CoM_bounds = zeros(size(data.initialCoM));
+    g = {g{:}, mass'*mass - data.initialMass(:)'*data.initialMass(:)};
+    lbg = [lbg; -0.1];
+    ubg = [ubg;  0.1];
+    
+    CoM_bounds = zeros(N_segment,N_cardinal_coor);
     for i = 1:N_cardinal_coor
         CoM_bounds(:,i) = data.initialCoM(:,i) .* data.inertiaRelativeBound;
     end
     
-    for j = 1:N_segment
-        w = {w{:}, CoM(j,:)'};
-        lbw = [lbw; data.initialCoM(j,:)' - CoM_bounds(j,:)'];
-        ubw = [ubw; data.initialCoM(j,:)' + CoM_bounds(j,:)'];
-    end
+    w = {w{:}, reshape(CoM',N_segment*N_cardinal_coor,1)};
+    lbw = [lbw; reshape((data.initialCoM - abs(CoM_bounds))',N_segment*N_cardinal_coor,1)];
+    ubw = [ubw; reshape((data.initialCoM + abs(CoM_bounds))',N_segment*N_cardinal_coor,1)];
 end
 
 Jx = vertcat(Jx{:});

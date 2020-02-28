@@ -125,7 +125,7 @@ save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end))
       '_optimisedKalman=' num2str(data.optimisedKalman) ...
       '_optimisedKalmanGravity' num2str(data.optimisedKalmanGravity) ...
       '_IPOPTMA57_.mat'],'model','data','stats')
-% GeneratePlots(model, data, q_opt, v_opt, u_opt);
+% GeneratePlots(model, data);
 % CalculateMomentum(model, data);
 % AnimatePlot(model, data, 'sol', 'mocap');
 toc
