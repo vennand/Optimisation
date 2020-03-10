@@ -116,6 +116,8 @@ data.u_opt = u_opt;
 
 % disp('Calculating Simulation')
 % [model, data] = GenerateSimulation(model, data);
+disp('Calculating Momentum')
+data = CalculateMomentum(model, data);
 
 stats = solver.stats;
 save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
@@ -126,7 +128,6 @@ save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end))
       '_optimisedKalmanGravity' num2str(data.optimisedKalmanGravity) ...
       '_IPOPTMA57_.mat'],'model','data','stats')
 % GeneratePlots(model, data);
-% CalculateMomentum(model, data);
 % AnimatePlot(model, data, 'sol', 'mocap');
 toc
 % showmotion(model, 0:data.Duration/data.Nint:data.Duration, q_opt(:,:))

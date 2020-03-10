@@ -1,4 +1,4 @@
-function [] = CalculateMomentum(model, data)
+function [data] = CalculateMomentum(model, data)
 
 T = data.Duration; % secondes
 Nint = data.Nint; % nb colloc nodes
@@ -76,8 +76,19 @@ end
 htot_kalman_slope = (htot_kalman(:,2:end) - htot_kalman(:,1:end-1))/ret.mass/dN;
 htot_estim_slope = (htot_estim(:,2:end) - htot_estim(:,1:end-1))/ret.mass/dN;
 
+% Linear regression
+% lm_x = fitlm(1:data.Nint+1,htot_kalman(4,:),'linear');
+% lm_y = fitlm(1:data.Nint+1,htot_kalman(5,:),'linear');
+% lm_z = fitlm(1:data.Nint+1,htot_kalman(6,:),'linear');
+polylm_x = polyfit(1:data.Nint+1,htot_kalman(4,:),1);
+polylm_y = polyfit(1:data.Nint+1,htot_kalman(5,:),1);
+polylm_z = polyfit(1:data.Nint+1,htot_kalman(6,:),1);
+
+% data.gravityLinearRegression = [lm_x.Coefficients.Estimate(2); lm_y.Coefficients.Estimate(2); lm_z.Coefficients.Estimate(2)];
+data.gravityLinearRegression = [polylm_x(1); polylm_y(1); polylm_z(1)];
+
 colors = [[1, 0, 0]; [0, 0.5, 0]; [0, 0, 1]];
-set(groot,'defaultAxesColorOrder', colors)
+set(groot,'defaultAxesColorOrder', colors);
 
 % figure()
 % plot(htot_full(1:3,:)')
@@ -102,5 +113,13 @@ figure()
 hold on
 plot(htot_estim_slope(4:6,:)')
 plot(htot_kalman_slope(4:6,:)','.-')
+
+% yline(mean(htot_kalman_slope(4,:)),'-.','Color',colors(1,:));
+% yline(mean(htot_kalman_slope(5,:)),'-.','Color',colors(2,:));
+% yline(mean(htot_kalman_slope(6,:)),'-.','Color',colors(3,:));
+% 
+% yline(polylm_x(1),'--','Color',colors(1,:));
+% yline(polylm_y(1),'--','Color',colors(2,:));
+% yline(polylm_z(1),'--','Color',colors(3,:));
 
 end

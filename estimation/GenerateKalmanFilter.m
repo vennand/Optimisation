@@ -37,6 +37,7 @@ if data.optimisedKalman
                                 '_optimiseGravity=' num2str(data.optimisedKalmanGravity) ...
                                 '_gravityRotationBound=' num2str(data.gravityRotationBound) ...
                                 '_IPOPTMA57_Q.mat'];
+    data.kalman_optimised_filename = optimisedKalman_filename;
     if isfile(optimisedKalman_filename)
         data_kalman = load(optimisedKalman_filename, 'data');
         data_kalman = data_kalman.('data');

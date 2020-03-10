@@ -158,6 +158,8 @@ data.u_opt = u_opt;
 
 disp('Calculating Simulation')
 [model, data] = GenerateSimulation(model, data);
+disp('Calculating Momentum')
+data = CalculateMomentum(model, data);
 
 stats = solver.stats;
 save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
@@ -169,7 +171,6 @@ save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end))
       '_inertiaRelativeBound=' strrep(num2str(data.inertiaRelativeBound'), '  ', '-') ...
       '_IPOPTMA57_Q.mat'],'model','data','stats')
 % GeneratePlots(model, data);
-% CalculateMomentum(model, data);
 % AnimatePlot(model, data, 'sol', 'kalman');
 toc
 % showmotion(model, 0:data.Duration/data.Nint:data.Duration, q_opt(:,:))
