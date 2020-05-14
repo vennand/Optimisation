@@ -9,9 +9,9 @@ weightQV = vertcat(data.weightQV(1) * ones(model.nq,1), data.weightQV(2) * ones(
 
 N_cardinal_coor = data.nCardinalCoor;
 N_segment = data.nSegment;
-if data.optimiseInertia
-    I = data.initialInertia;
-end
+% if data.optimiseInertia
+%     I = data.initialInertia;
+% end
 
 tau_base = SX.zeros(6,1);
 x = SX.sym('x', model.nx);
@@ -24,9 +24,10 @@ if data.optimiseGravity && data.optimiseInertia
     G = SX.sym('G',N_cardinal_coor);
     mass = SX.sym('M',N_segment);
     CoM = SX.sym('CoM',N_segment,N_cardinal_coor);
-    forDyn = @(x,u,G,mass,CoM)[  x(model.idx_v)
+    I = SX.sym('I',N_segment,N_cardinal_coor*N_cardinal_coor);
+    forDyn = @(x,u,G,mass,CoM,I)[  x(model.idx_v)
         FDab_Casadi_gravity_inertia( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base ,u), G, mass, CoM, I )];
-    f = Function('f', {x, u, G, mass, CoM}, {forDyn(x,u,G,mass,CoM)});
+    f = Function('f', {x, u, G, mass, CoM, I}, {forDyn(x,u,G,mass,CoM,I)});
 elseif data.optimiseGravity
     G = SX.sym('G',N_cardinal_coor);
     forDyn = @(x,u,G)[  x(model.idx_v)
@@ -35,9 +36,10 @@ elseif data.optimiseGravity
 elseif data.optimiseInertia
     mass = SX.sym('M',N_segment);
     CoM = SX.sym('CoM',N_segment,N_cardinal_coor);
-    forDyn = @(x,u,mass,CoM)[  x(model.idx_v)
+    I = SX.sym('I',N_segment,N_cardinal_coor*N_cardinal_coor);
+    forDyn = @(x,u,mass,CoM,I)[  x(model.idx_v)
         FDab_Casadi_inertia( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base ,u), mass, CoM, I )];
-    f = Function('f', {x, u, mass, CoM}, {forDyn(x,u,mass,CoM)});
+    f = Function('f', {x, u, mass, CoM, I}, {forDyn(x,u,mass,CoM,I)});
 else
     forDyn = @(x,u)[  x(model.idx_v)
         FDab_Casadi( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base ,u)  )];
@@ -67,8 +69,14 @@ if data.optimiseGravity
 end
 if data.optimiseInertia
     mass = MX.sym('M',N_segment);
+    % Étrange, mais il faut le faire comme ça, sinon l'expression finale
+    % n'est pas purement symbolique
+    % CoM = MX.sym('CoM',N_segment,N_cardinal_coor);
+    % L'expression précédente, quoique plus simple, ne fonctionne pas
     CoM = MX.sym('CoM',N_segment*N_cardinal_coor,1);
     CoM = reshape(CoM,N_cardinal_coor,N_segment)';
+    I = MX.sym('CoM',N_segment*N_cardinal_coor*N_cardinal_coor,1);
+    I = reshape(I,N_cardinal_coor*N_cardinal_coor,N_segment)';
 end
 
 kalman_q = data.kalman_q;
@@ -95,10 +103,10 @@ for k=0:Nint-1
 %     Xk = Xk.xf;
     if data.optimiseGravity && data.optimiseInertia
         for j=1:M
-            k1 = f(Xk, Uk, G, mass, CoM);
-            k2 = f(Xk + DT/2 * k1, Uk, G, mass, CoM);
-            k3 = f(Xk + DT/2 * k2, Uk, G, mass, CoM);
-            k4 = f(Xk + DT * k3, Uk, G, mass, CoM);
+            k1 = f(Xk, Uk, G, mass, CoM, I);
+            k2 = f(Xk + DT/2 * k1, Uk, G, mass, CoM, I);
+            k3 = f(Xk + DT/2 * k2, Uk, G, mass, CoM, I);
+            k4 = f(Xk + DT * k3, Uk, G, mass, CoM, I);
 
             Xk=Xk+DT/6*(k1 +2*k2 +2*k3 +k4);
         end
@@ -113,10 +121,10 @@ for k=0:Nint-1
         end
     elseif data.optimiseInertia
         for j=1:M
-            k1 = f(Xk, Uk, mass, CoM);
-            k2 = f(Xk + DT/2 * k1, Uk, mass, CoM);
-            k3 = f(Xk + DT/2 * k2, Uk, mass, CoM);
-            k4 = f(Xk + DT * k3, Uk, mass, CoM);
+            k1 = f(Xk, Uk, mass, CoM, I);
+            k2 = f(Xk + DT/2 * k1, Uk, mass, CoM, I);
+            k3 = f(Xk + DT/2 * k2, Uk, mass, CoM, I);
+            k4 = f(Xk + DT * k3, Uk, mass, CoM, I);
 
             Xk=Xk+DT/6*(k1 +2*k2 +2*k3 +k4);
         end
@@ -177,6 +185,15 @@ if data.optimiseInertia
     w = {w{:}, reshape(CoM',N_segment*N_cardinal_coor,1)};
     lbw = [lbw; reshape((data.initialCoM - abs(CoM_bounds))',N_segment*N_cardinal_coor,1)];
     ubw = [ubw; reshape((data.initialCoM + abs(CoM_bounds))',N_segment*N_cardinal_coor,1)];
+    
+    I_bounds = zeros(N_segment,N_cardinal_coor,N_cardinal_coor);
+    for i = 1:N_segment
+        I_bounds(i,:,:) = data.initialInertia(i,:,:) * data.inertiaRelativeBound(i);
+    end
+    
+    w = {w{:}, reshape(I',N_segment*N_cardinal_coor*N_cardinal_coor,1)};
+    lbw = [lbw; reshape(reshape(data.initialInertia - abs(I_bounds),N_segment,N_cardinal_coor*N_cardinal_coor)',N_segment*N_cardinal_coor*N_cardinal_coor,1)];
+    ubw = [ubw; reshape(reshape(data.initialInertia + abs(I_bounds),N_segment,N_cardinal_coor*N_cardinal_coor)',N_segment*N_cardinal_coor*N_cardinal_coor,1)];
 end
 
 Jx = vertcat(Jx{:});

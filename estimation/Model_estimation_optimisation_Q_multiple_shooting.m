@@ -15,7 +15,7 @@ data.optimiseGravity = true;
 data.gravity = [0; 0; -9.81];
 data.gravityRotationBound = pi/16;
 
-data.optimiseInertia = true;
+data.optimiseInertia = false;
 data.inertiaRelativeBound = [0; 0.3; 0; 0]; % pelvis, thorax, right thigh, left thigh
 data.nSegment = 4; data.nCardinalCoor = 3;
 
@@ -87,6 +87,9 @@ if data.optimiseInertia
     
     N_CoM = data.nSegment * data.nCardinalCoor;
     w0 = [w0; reshape(data.initialCoM',[N_CoM,1])];
+    
+    N_I = data.nSegment * data.nCardinalCoor * data.nCardinalCoor;
+    w0 = [w0; reshape(reshape(data.initialInertia,data.nSegment,data.nCardinalCoor*data.nCardinalCoor)',[N_I,1])];
 end
 
 sol = solver('x0', w0, 'lbx', lbw, 'ubx', ubw, 'lbg', lbg, 'ubg', ubg);
@@ -97,7 +100,7 @@ u_opt = nan(model.nu,data.Nint);
 w_opt = full(sol.x);
 
 if data.optimiseGravity && data.optimiseInertia
-    N_extras = N_G + N_mass + N_CoM;
+    N_extras = N_G + N_mass + N_CoM + N_I;
     
     for i=1:model.nq
         q_opt(i,:) = w_opt(i:model.nx+model.nu:end - N_extras)';
@@ -110,11 +113,14 @@ if data.optimiseGravity && data.optimiseInertia
     
     mass_opt = w_opt(end - N_extras + N_G + 1:end - N_extras + N_G + N_mass);
     
-    CoM_opt = reshape(w_opt(end - N_CoM + 1:end),[data.nCardinalCoor, data.nSegment])';
+    CoM_opt = reshape(w_opt(end - N_extras + N_G + N_mass + 1:end - N_I),[data.nCardinalCoor, data.nSegment])';
+    
+    I_opt = reshape(reshape(w_opt(end - N_I + 1:end),[data.nCardinalCoor*data.nCardinalCoor, data.nSegment])',data.nSegment, data.nCardinalCoor, data.nCardinalCoor);
     
     data.G_opt = G_opt;
     data.mass_opt = mass_opt;
     data.CoM_opt = CoM_opt;
+    data.I_opt = I_opt;
 elseif data.optimiseGravity
     N_extras = N_G;
     for i=1:model.nq
@@ -128,7 +134,7 @@ elseif data.optimiseGravity
     
     data.G_opt = G_opt;
 elseif data.optimiseInertia
-    N_extras = N_mass + N_CoM;
+    N_extras = N_mass + N_CoM + N_I;
     for i=1:model.nq
         q_opt(i,:) = w_opt(i:model.nx+model.nu:end - N_extras)';
         v_opt(i,:) = w_opt(i+model.nq:model.nx+model.nu:end - N_extras)';
@@ -138,10 +144,13 @@ elseif data.optimiseInertia
     end
     mass_opt = w_opt(end - N_extras + 1:end - N_extras + N_mass);
     
-    CoM_opt = reshape(w_opt(end - N_CoM + 1:end),[data.nCardinalCoor, data.nSegment])';
+    CoM_opt = reshape(w_opt(end - N_extras + N_mass + 1:end - N_I),[data.nCardinalCoor, data.nSegment])';
+    
+    I_opt = reshape(reshape(w_opt(end - N_I + 1:end),[data.nCardinalCoor*data.nCardinalCoor, data.nSegment])',data.nSegment, data.nCardinalCoor, data.nCardinalCoor);
     
     data.mass_opt = mass_opt;
     data.CoM_opt = CoM_opt;
+    data.I_opt = I_opt;
 else
     for i=1:model.nq
         q_opt(i,:) = w_opt(i:model.nx+model.nu:end)';
