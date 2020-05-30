@@ -12,25 +12,29 @@ N = model.NB;
 
 x = SX.sym('x', model.nx,1);
 u = SX.sym('u', model.nu,1);
+model.gamma_q = @gamma_q;
 
 tau_base = SX.zeros(6,1);
 forDyn = @(x,u)[  x(model.idx_v)
-    FDab_Casadi( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base,u) )];
+%     FDab_Casadi( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base,u) )];
+    FDgq_Casadi( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base,u) )];
 
 f = Function('f', {x, u}, {forDyn(x,u)});
 
 x = zeros(model.nx,1);
 u = zeros(model.nu,1);
 
-% Initial velocities
-x(N+1) = 1;
+% % Initial velocities
+% x(N+1) = -model.gravity(1)/2;
+% x(N+2) = -model.gravity(2)/2;
+% x(N+3) = -model.gravity(3)/2;
 x(N+3) = 9.81/2;
-% x(N+4) = 0;
-% x(N+7) = 2;
+x(N+4) = -6;
+% x(N+7) = -1.5;
 % x(N+8) = 2;
 % x(N+9) = 2;
 
-% u(3) = 1;
+% u(1) = -2;
 
 [N_cardinal_coor, N_markers] = size(model.markers.coordinates);
 PosMarkers = zeros(N_cardinal_coor, N_markers, simNint+1);

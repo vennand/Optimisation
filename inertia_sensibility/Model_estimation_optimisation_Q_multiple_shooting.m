@@ -11,6 +11,8 @@ data.Nint = 100;% number of control nodesl
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
+data.simNint = 200;
+
 data.dataFile = '../data/Do_822_contact_2.c3d';
 data.kalmanDataFile_q = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_Q.mat';
 data.kalmanDataFile_v = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_V.mat';
@@ -58,10 +60,16 @@ disp('Loading Kalman Filter')
 [model, data] = GenerateKalmanFilter(model,data);
 disp('Loading Real Data')
 [model, data] = GenerateRealData(model,data);
+% disp('Generating Simulation')
+% [model, data, simState, simStateMassGrad, simStateCoMGrad, simStateInertiaGrad] = GenerateSimulation_RK4(model,data);
 disp('Initialize Estimation')
 data = saveInitialValues(model, data);
 disp('Calculating Estimation')
-[prob, lbw, ubw, lbg, ubg, objFunc, conFunc, objGrad, conGrad] = GenerateEstimation_Q_multiple_shooting(model, data);
+[prob, lbw, ubw, lbg, ubg, ...
+ objFunc, conFunc, objGrad, conGrad, ...
+ stateMassGrad, stateCoMGrad, stateInertiaGrad] = ...
+    GenerateEstimation_Q_multiple_shooting(model, data);
+%  JstateInertiaGrad, JcontrolInertiaGrad, JinertiaInertiaGrad] = ...
 
 % [lbw, ubw] = GenerateInitialConstraints(model, data, lbw, ubw);
 % [lbw, ubw] = GenerateFinalConstraints(model, data, lbw, ubw);
@@ -95,6 +103,7 @@ w0 = [w0; reshape(data.initialCoM',[N_CoM,1])];
 
 N_I = data.nSegment * data.nCardinalCoor;
 w0 = [w0; reshape(data.initialInertia',[N_I,1])];
+data.w0 = w0;
 
 sol = solver('x0', w0, 'lbx', lbw, 'ubx', ubw, 'lbg', lbg, 'ubg', ubg);
 
@@ -102,6 +111,7 @@ q_opt = nan(model.nq,data.Nint+1);
 v_opt = nan(model.nq,data.Nint+1);
 u_opt = nan(model.nu,data.Nint);
 w_opt = full(sol.x);
+data.w_opt = w_opt;
 
 N_extras = N_mass + N_CoM + N_I;
 for i=1:model.nq
@@ -134,13 +144,57 @@ disp('Calculating Simulation')
 disp('Calculating Momentum')
 data = CalculateMomentum(model, data);
 
+% x0 = zeros(model.nx,1);
+% u0 = zeros(model.nu,1);
+% x(model.nq+3) = 9.81/2;
+% x(model.nq+4) = -6;
+% simState = simState(x0,u0);
+
+% data.simStateMassGrad_init = simStateMassGrad(w0(end - N_extras + 1:end - N_extras + N_mass));
+% data.simStateMassGrad_opt = simStateMassGrad(w_opt(end - N_extras + 1:end - N_extras + N_mass));
+% data.simStateCoMGrad_init = simStateCoMGrad(w0(end - N_extras + N_mass + 1:end - N_I));
+% data.simStateCoMGrad_opt = simStateCoMGrad(w_opt(end - N_extras + N_mass + 1:end - N_I));
+% data.simStateInertiaGrad_init = simStateInertiaGrad(w0(end - N_I + 1:end));
+% data.simStateInertiaGrad_opt = simStateInertiaGrad(w_opt(end - N_I + 1:end));
+
+data.objFunc_init = full(objFunc(data.w0));
+data.objFunc_opt = full(objFunc(data.w_opt));
+data.conFunc_init = full(conFunc(data.w0));
+data.conFunc_opt = full(conFunc(data.w_opt));
+data.objGrad_init = full(objGrad(data.w0));
+data.objGrad_opt = full(objGrad(data.w_opt));
+data.conGrad_init = full(conGrad(data.w0));
+data.conGrad_opt = full(conGrad(data.w_opt));
+
+data.stateMassGrad_init = {};
+data.stateMassGrad_opt = {};
+data.stateCoMGrad_init = {};
+data.stateCoMGrad_opt = {};
+data.stateInertiaGrad_init = {};
+data.stateInertiaGrad_opt = {};
+for l = 1:data.nSegment
+    data.stateMassGrad_init = {data.stateMassGrad_init{:}, full(stateMassGrad{l}(data.w0))};
+    data.stateMassGrad_opt = {data.stateMassGrad_opt{:}, full(stateMassGrad{l}(data.w_opt))};
+    data.stateCoMGrad_init = {data.stateCoMGrad_init{:}, full(stateCoMGrad{l}(data.w0))};
+    data.stateCoMGrad_opt = {data.stateCoMGrad_opt{:}, full(stateCoMGrad{l}(data.w_opt))};
+    data.stateInertiaGrad_init = {data.stateInertiaGrad_init{:}, full(stateInertiaGrad{l}(data.w0))};
+    data.stateInertiaGrad_opt = {data.stateInertiaGrad_opt{:}, full(stateInertiaGrad{l}(data.w_opt))};
+end
+
+% data.JstateInertiaGrad_init = JstateInertiaGrad(data.w0(end - N_extras + 1:end));
+% data.JstateInertiaGrad_opt = JstateInertiaGrad(data.w_opt(end - N_extras + 1:end));
+% data.JcontrolInertiaGrad_init = JcontrolInertiaGrad(data.w0(end - N_extras + 1:end));
+% data.JcontrolInertiaGrad_opt = JcontrolInertiaGrad(data.w_opt(end - N_extras + 1:end));
+% data.JinertiaInertiaGrad_init = JinertiaInertiaGrad(data.w0(end - N_extras + 1:end));
+% data.JinertiaInertiaGrad_opt = JinertiaInertiaGrad(data.w_opt(end - N_extras + 1:end));
+
 stats = solver.stats;
 save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
       '_U' num2str(data.weightU) '_N' num2str(data.Nint) ...
       '_weightQV' num2str(data.weightQV(1)) '-' num2str(data.weightQV(2)) ...
-      '_bounds=' strjoin(strsplit(num2str(data.massBound'), ' ', 'CollapseDelimiters', true),',') ...
-      '_' strjoin(strsplit(num2str(data.CoMBound'), ' ', 'CollapseDelimiters', true),',') ...
-      '_' strjoin(strsplit(num2str(data.inertiaBound'), ' ', 'CollapseDelimiters', true),',') ...
+      '_massBounds=' strjoin(strsplit(num2str(data.massBound'), ' ', 'CollapseDelimiters', true),',') ...
+      '_CoMBounds=' strjoin(strsplit(num2str(data.CoMBound'), ' ', 'CollapseDelimiters', true),',') ...
+      '_inertiaBounds=' strjoin(strsplit(num2str(data.inertiaBound'), ' ', 'CollapseDelimiters', true),',') ...
       '_IPOPTMA57_Q.mat'],'model','data','stats')
 % GeneratePlots(model, data);
 % AnimatePlot(model, data, 'sol', 'kalman');

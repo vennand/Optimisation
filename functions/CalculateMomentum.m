@@ -4,9 +4,13 @@ T = data.Duration; % secondes
 Nint = data.Nint; % nb colloc nodes
 dN = T/Nint;
 
-% clear, clc, close all
-% close all
-% run('../startup.m')
+disp(['Colors are:' newline ...
+      'X' blanks(4) 'red' newline ...
+      'Y' blanks(4) 'green' newline ...
+      'Z' blanks(4) 'blue' newline ...
+      'Shapes are:' newline ...
+      'Estimation' blanks(4) '-' newline ...
+      'Kalman    ' blanks(4) '.-'])
 
 % run('/home/laboratoire/mnt/E/Bureau/Partha/GIT_S2MLib/loadS2MLib_pwd.m');
 % addpath('/home/laboratoire/mnt/E/Librairies/biorbd/18_juin_2018/release/wrapper/matlab')
@@ -19,14 +23,14 @@ dN = T/Nint;
 
 % load('Solutions/Do_822_F3100-3311_U1e-07_N105_IPOPTMA57.mat')
 
-load('../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_Q.mat')
-load('../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_V.mat')
-load('../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_A.mat')
-
-Q2(15:16, :) = Q2(16:-1:15, :);
-Q2(24:25, :) = Q2(25:-1:24, :);
-V2(15:16, :) = V2(16:-1:15, :);
-V2(24:25, :) = V2(25:-1:24, :);
+% load('../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_Q.mat')
+% load('../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_V.mat')
+% load('../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_A.mat')
+% 
+% Q2(15:16, :) = Q2(16:-1:15, :);
+% Q2(24:25, :) = Q2(25:-1:24, :);
+% V2(15:16, :) = V2(16:-1:15, :);
+% V2(24:25, :) = V2(25:-1:24, :);
 % new_a(15:16, :) = new_a(16:-1:15, :);
 % new_a(24:25, :) = new_a(25:-1:24, :);
 % new_tau(15:16, :) = new_tau(16:-1:15, :);
@@ -41,18 +45,17 @@ V2(24:25, :) = V2(25:-1:24, :);
 % ret.htot is a vector 6x1, with ret.htot(1:3) = angular momentum, and
 % ret.htot(4:6) = linear momentum
 
-htot_full = [];
-htot_kalman_full = [];
-for i = 1:3750
-    ret = EnerMo( model, Q2(:,i), V2(:,i) );
-    htot_i = ret.htot;
-    % htot_i(1:3) = ret.htot(1:3) - ret.mass * cross(ret.cm, ret.vcm);
-    htot_i(1:3) = ret.htot(1:3) - cross(ret.cm, ret.htot(4:6));
-    htot_full = [htot_full ret.htot];
-    htot_kalman_full = [htot_kalman_full htot_i];
-end
+% htot_full = [];
+% htot_kalman_full = [];
+% for i = 1:3750
+%     ret = EnerMo( model, Q2(:,i), V2(:,i) );
+%     htot_i = ret.htot;
+%     % htot_i(1:3) = ret.htot(1:3) - ret.mass * cross(ret.cm, ret.vcm);
+%     htot_i(1:3) = ret.htot(1:3) - cross(ret.cm, ret.htot(4:6));
+%     htot_full = [htot_full ret.htot];
+%     htot_kalman_full = [htot_kalman_full htot_i];
+% end
 
-htot = [];
 htot_kalman = [];
 for i = 1:data.Nint+1
     ret = EnerMo( model, data.kalman_q(:,i), data.kalman_v(:,i) );
@@ -98,20 +101,20 @@ set(groot,'defaultAxesColorOrder', colors);
 % plot(htot(1:3,:)')
 figure()
 hold on
-plot(htot_kalman(1:3,:)','.-')
 plot(htot_estim(1:3,:)','-')
+plot(htot_kalman(1:3,:)','.-')
 figure()
 hold on
-plot(htot_estim(4:6,:)')
+plot(htot_estim(4:6,:)','-')
 plot(htot_kalman(4:6,:)','.-')
 
 figure()
 hold on
-plot(htot_estim_slope(1:3,:)')
+plot(htot_estim_slope(1:3,:)','-')
 plot(htot_kalman_slope(1:3,:)','.-')
 figure()
 hold on
-plot(htot_estim_slope(4:6,:)')
+plot(htot_estim_slope(4:6,:)','-')
 plot(htot_kalman_slope(4:6,:)','.-')
 
 % yline(mean(htot_kalman_slope(4,:)),'-.','Color',colors(1,:));

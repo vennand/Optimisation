@@ -7,7 +7,7 @@ import casadi.*
 
 data.nDoF = 42;
 
-data.Nint = 100;% number of control nodesl
+data.Nint = 50;% number of control nodesl
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
@@ -36,7 +36,7 @@ data.weightCoM = 1;
 data.weightI = 1;
 
 data.gravityRotationBound = pi/16;
-data.kalman_optimised_filename = ['../gravity/Solutions/Do_822_F' ...
+data.kalman_optimised_filename = ['../gravity/Simulations/Do_822_F' ...
                                     num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
                                     '_U' num2str(data.weightU) '_N' num2str(data.Nint) ...
                                     '_weightQV' num2str(1) '-' num2str(0.01) ...
@@ -54,8 +54,21 @@ data.nSegment = 4; data.nCardinalCoor = 3;
 
 disp('Generating Model')
 [model, data] = GenerateModel(data);
-disp('Loading Kalman Filter')
-[model, data] = GenerateKalmanFilter(model,data);
+% disp('Loading Kalman Filter')
+% [model, data] = GenerateKalmanFilter(model,data);
+
+% Load simulated data
+simulation = load('../gravity/Simulations/Do_822_F3100-3300_U1e-07_N50_weightQV1-0.01_gravityRotationBound=0.19635_IPOPTMA57_Q.mat');
+sim_data = simulation.data;
+sim_model = simulation.model;
+data.sim_data = sim_data;
+data.sim_model = sim_model;
+
+data.kalman_q = sim_data.q_opt;
+data.kalman_v = sim_data.v_opt;
+data.kalman_tau = sim_data.u_opt;
+model.gravity = sim_data.G_opt;
+
 disp('Loading Real Data')
 [model, data] = GenerateRealData(model,data);
 disp('Initialize Estimation')
@@ -146,3 +159,8 @@ save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end))
 % AnimatePlot(model, data, 'sol', 'kalman');
 toc
 % showmotion(model, 0:data.Duration/data.Nint:data.Duration, q_opt(:,:))
+
+[mass_sim, CoM_sim, I_sim] = mcI(data.sim_data.sim_model.I{9});
+disp(I_opt)
+disp(I_sim)
+disp(data.initialInertia)

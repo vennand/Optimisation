@@ -7,9 +7,13 @@ import casadi.*
 
 data.nDoF = 42;
 
-data.Nint = 100;% number of control nodesl
+data.Nint = 50;% number of control nodesl
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
+
+data.gravity = [0; 0; -9.81];
+data.gravityRotationBound = pi/16;
+data.nCardinalCoor = 3;
 
 data.dataFile = '../data/Do_822_contact_2.c3d';
 data.kalmanDataFile_q = '../data/Do_822_contact_2_MOD200.00_GenderF_DoCig_Q.mat';
@@ -31,35 +35,24 @@ data.weightU = 1e-7;
 data.weightX = 1;
 data.weightQV = [1; 0.01];
 
-data.weightMass = 1;
-data.weightCoM = 1;
-data.weightI = 1;
-
-data.gravityRotationBound = pi/16;
-data.kalman_optimised_filename = ['../gravity/Solutions/Do_822_F' ...
-                                    num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
-                                    '_U' num2str(data.weightU) '_N' num2str(data.Nint) ...
-                                    '_weightQV' num2str(1) '-' num2str(0.01) ...
-                                    '_gravityRotationBound=' num2str(data.gravityRotationBound) ...
-                                    '_IPOPTMA57_Q.mat'];
-                                
-pelvis = 6; thorax = 9; right_thigh = 33; left_thigh = 39;
-
-data.segments = [pelvis, thorax, right_thigh, left_thigh];
-
-data.massBound = [0; 2; 0; 0]; % kg
-data.CoMBound = [0; 0.1; 0; 0]; % m
-data.inertiaBound = [0; 0.2; 0; 0];
-data.nSegment = 4; data.nCardinalCoor = 3;
-
 disp('Generating Model')
 [model, data] = GenerateModel(data);
-disp('Loading Kalman Filter')
-[model, data] = GenerateKalmanFilter(model,data);
+% disp('Loading Kalman Filter')
+% [model, data] = GenerateKalmanFilter(model,data);
+
+% Load simulated data
+simulation = load('../simulation/Simulations/Do_822_simN200_simV0.001_U0.01_N50_G1,0.5,-9.7461_CoM0,0,0.17429_I0.39386,0.43611,0.18255.mat');
+sim_data = simulation.data;
+sim_model = simulation.model;
+data.sim_data = sim_data;
+data.sim_model = sim_model;
+
+data.kalman_q = sim_data.gaussianNoiseX(1:model.nq,:);
+data.kalman_v = sim_data.gaussianNoiseX(model.nq+1:end,:);
+data.kalman_tau = sim_data.u;
+
 disp('Loading Real Data')
 [model, data] = GenerateRealData(model,data);
-disp('Initialize Estimation')
-data = saveInitialValues(model, data);
 disp('Calculating Estimation')
 [prob, lbw, ubw, lbg, ubg, objFunc, conFunc, objGrad, conGrad] = GenerateEstimation_Q_multiple_shooting(model, data);
 
@@ -87,14 +80,8 @@ for k=1:data.Nint
 end
 w0 = [w0; data.kalman_q(:,data.Nint+1); data.kalman_v(:,data.Nint+1)];
 
-N_mass = data.nSegment;
-w0 = [w0; data.initialMass];
-
-N_CoM = data.nSegment * data.nCardinalCoor;
-w0 = [w0; reshape(data.initialCoM',[N_CoM,1])];
-
-N_I = data.nSegment * data.nCardinalCoor;
-w0 = [w0; reshape(data.initialInertia',[N_I,1])];
+N_G = data.nCardinalCoor;
+w0 = [w0; data.gravity];
 
 sol = solver('x0', w0, 'lbx', lbw, 'ubx', ubw, 'lbg', lbg, 'ubg', ubg);
 
@@ -103,31 +90,22 @@ v_opt = nan(model.nq,data.Nint+1);
 u_opt = nan(model.nu,data.Nint);
 w_opt = full(sol.x);
 
-N_extras = N_mass + N_CoM + N_I;
 for i=1:model.nq
-    q_opt(i,:) = w_opt(i:model.nx+model.nu:end - N_extras)';
-    v_opt(i,:) = w_opt(i+model.nq:model.nx+model.nu:end - N_extras)';
+    q_opt(i,:) = w_opt(i:model.nx+model.nu:end - N_G)';
+    v_opt(i,:) = w_opt(i+model.nq:model.nx+model.nu:end - N_G)';
 end
 for i=1:model.nu
-    u_opt(i,:) = w_opt(i+model.nx:model.nx+model.nu:end - N_extras)';
+    u_opt(i,:) = w_opt(i+model.nx:model.nx+model.nu:end - N_G)';
 end
-mass_opt = w_opt(end - N_extras + 1:end - N_extras + N_mass);
+G_opt = w_opt(end - N_G + 1:end);
 
-CoM_opt = reshape(w_opt(end - N_extras + N_mass + 1:end - N_I),[data.nCardinalCoor, data.nSegment])';
-
-I_opt = reshape(w_opt(end - N_I + 1:end),[data.nCardinalCoor, data.nSegment])';
-
-data.mass_opt = mass_opt;
-data.CoM_opt = CoM_opt;
-data.I_opt = I_opt;
+data.G_opt = G_opt;
 
 data.q_opt = q_opt;
 data.v_opt = v_opt;
 data.u_opt = u_opt;
 
-for i=1:length(data.segments)
-    model.I{data.segments(i)} = mcI(data.mass_opt(i),data.CoM_opt(i,:), diag(data.I_opt(i,:)));
-end
+model.gravity = data.G_opt;
 
 disp('Calculating Simulation')
 [model, data] = GenerateSimulation(model, data);
@@ -135,12 +113,10 @@ disp('Calculating Momentum')
 data = CalculateMomentum(model, data);
 
 stats = solver.stats;
-save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
+save(['Simulations/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
       '_U' num2str(data.weightU) '_N' num2str(data.Nint) ...
       '_weightQV' num2str(data.weightQV(1)) '-' num2str(data.weightQV(2)) ...
-      '_bounds=' strjoin(strsplit(num2str(data.massBound'), ' ', 'CollapseDelimiters', true),',') ...
-      '_' strjoin(strsplit(num2str(data.CoMBound'), ' ', 'CollapseDelimiters', true),',') ...
-      '_' strjoin(strsplit(num2str(data.inertiaBound'), ' ', 'CollapseDelimiters', true),',') ...
+      '_gravityRotationBound=' num2str(data.gravityRotationBound) ...
       '_IPOPTMA57_Q.mat'],'model','data','stats')
 % GeneratePlots(model, data);
 % AnimatePlot(model, data, 'sol', 'kalman');
