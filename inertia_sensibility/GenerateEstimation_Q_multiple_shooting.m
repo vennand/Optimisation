@@ -187,7 +187,7 @@ JI = fJI(mass - data.initialMass, ...
 
 Jx = vertcat(Jx{:});
 w = vertcat(w{:});
-inertia_var = vertcat(inertia_var{:});
+% inertia_var = vertcat(inertia_var{:});
 w_Xkend = vertcat(w_Xkend{:});
 g = vertcat(g{:});
 prob = struct('f', sum(Jx)+Ju+JI, 'x', w, 'g', g);

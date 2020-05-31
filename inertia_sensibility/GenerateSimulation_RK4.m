@@ -1,4 +1,4 @@
-function [model, data, simState, simStateMassGrad, simStateCoMGrad, simStateInertiaGrad] = GenerateSimulation_RK4(model,data)
+function [model, data, simStateMassGrad, simStateCoMGrad, simStateInertiaGrad] = GenerateSimulation_RK4(model,data)
 import casadi.*
 
 simNint = data.simNint;
@@ -12,16 +12,24 @@ N = model.NB;
 N_cardinal_coor = data.nCardinalCoor;
 N_segment = data.nSegment;
 
+tau_base = SX.zeros(6,1);
 x = SX.sym('x', model.nx,1);
 u = SX.sym('u', model.nu,1);
 
-mass = SX.sym('M',N_segment);
-CoM = SX.sym('CoM',N_segment,N_cardinal_coor);
-I = SX.sym('I',N_segment,N_cardinal_coor);
+mass = {};
+CoM = {};
+I = {};
+for l = 1:N_segment
+    mass = {mass{:}, SX.sym(['mass_' num2str(l)], 1)};
+    CoM = {CoM{:}, SX.sym(['CoM_' num2str(l)], N_cardinal_coor)};
+    I = {I{:}, SX.sym(['I_' num2str(l)], N_cardinal_coor)};
+end
+mass = vertcat(mass{:});
+CoM = vertcat(CoM{:});
+I = vertcat(I{:});
 
 model.gamma_q = @gamma_q;
 
-tau_base = SX.zeros(6,1);
 forDyn = @(x,u,mass,CoM,I)[  x(model.idx_v)
 %     FDab_Casadi( model, x(model.idx_q), x(model.idx_v), vertcat(tau_base,u) )];
     FDgq_Casadi_inertia( model, data, x(model.idx_q), x(model.idx_v), vertcat(tau_base,u), mass, CoM, I )];
@@ -34,15 +42,17 @@ u = MX.sym(['U_' '0'], model.nu);
 x0 = x;
 u0 = u;
 
-mass = MX.sym('M',N_segment);
-% Étrange, mais il faut le faire comme ça, sinon l'expression finale
-% n'est pas purement symbolique
-% CoM = MX.sym('CoM',N_segment,N_cardinal_coor);
-% L'expression précédente, quoique plus simple, ne fonctionne pas
-CoM = MX.sym('CoM',N_segment*N_cardinal_coor,1);
-CoM = reshape(CoM,N_cardinal_coor,N_segment)';
-I = MX.sym('I',N_segment*N_cardinal_coor,1);
-I = reshape(I,N_cardinal_coor,N_segment)';
+mass = {};
+CoM = {};
+I = {};
+for l = 1:N_segment
+    mass = {mass{:}, MX.sym(['mass_' num2str(l)], 1)};
+    CoM = {CoM{:}, MX.sym(['CoM_' num2str(l)], N_cardinal_coor)};
+    I = {I{:}, MX.sym(['I_' num2str(l)], N_cardinal_coor)};
+end
+mass = vertcat(mass{:});
+CoM = vertcat(CoM{:});
+I = vertcat(I{:});
 
 % % Initial velocities
 % x(N+1) = -model.gravity(1)/2;
@@ -94,21 +104,39 @@ end
 % N_I = data.nSegment * data.nCardinalCoor;
 % N_extras = N_mass + N_CoM + N_I;
 
-% inertia_var = {};
-% inertia_var = {inertia_var{:}, mass};
-% inertia_var = {inertia_var{:}, reshape(CoM',N_segment*N_cardinal_coor,1)};
-% inertia_var = {inertia_var{:}, reshape(I',N_segment*N_cardinal_coor,1)};
-% inertia_var = vertcat(inertia_var{:});
+inertia_var = {};
+inertia_var = {inertia_var{:}, mass};
+inertia_var = {inertia_var{:}, CoM};
+inertia_var = {inertia_var{:}, I};
+inertia_var = vertcat(inertia_var{:});
 
-CoM = reshape(CoM',N_segment*N_cardinal_coor,1);
-I = reshape(I',N_segment*N_cardinal_coor,1);
+% CoM = reshape(CoM',N_segment*N_cardinal_coor,1);
+% I = reshape(I',N_segment*N_cardinal_coor,1);
 
 % data.x = Xi;
 % data.u = Ui;
 
-simState = Function('XU',{x0,u0},{x});
+% simState = Function('XU',{x0,u0},{x});
 
-simStateMassGrad = Function('dxMass', {mass}, {jacobian(x,mass)});
-simStateCoMGrad = Function('dxCoM', {CoM}, {jacobian(x,CoM)});
-simStateInertiaGrad = Function('dxI', {I}, {jacobian(x,I)});
+% simStateMassGrad = Function('dxMass', {mass}, {jacobian(x,mass)});
+% simStateCoMGrad = Function('dxCoM', {CoM}, {jacobian(x,CoM)});
+% simStateInertiaGrad = Function('dxI', {I}, {jacobian(x,I)});
+
+N_mass = N_segment;
+N_CoM = N_segment * N_cardinal_coor;
+N_I = N_segment * N_cardinal_coor;
+N_extras = N_mass + N_CoM + N_I;
+
+simStateMassGrad = {};
+simStateCoMGrad = {};
+simStateInertiaGrad = {};
+
+for l = 1:N_segment
+    simStateMassGrad = {simStateMassGrad{:}, Function('IdXk_mass', {x0,u0,inertia_var}, ...
+        {jacobian(x,inertia_var(end - N_extras + l))})};
+    simStateCoMGrad = {simStateCoMGrad{:}, Function('IdXk_CoM', {x0,u0,inertia_var}, ...
+        {jacobian(x,inertia_var(end - N_extras + N_mass + 3*l-2:end - N_extras + N_mass + 3*l))})};
+    simStateInertiaGrad = {simStateInertiaGrad{:}, Function('IdXk_I', {x0,u0,inertia_var}, ...
+        {jacobian(x,inertia_var(end - N_I + 3*l-2:end - N_I + 3*l))})};
+end
 end

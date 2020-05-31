@@ -49,9 +49,9 @@ pelvis = 6; thorax = 9; right_thigh = 33; left_thigh = 39;
 
 data.segments = [pelvis, thorax, right_thigh, left_thigh];
 
-data.massBound = [0; 2; 0; 0]; % kg
-data.CoMBound = [0; 0.1; 0; 0]; % m
-data.inertiaBound = [0; 0.2; 0; 0];
+data.massBound = [0; 2; 1; 1]; % kg
+data.CoMBound = [0; 0.1; 0.1; 0.1]; % m
+data.inertiaBound = [0; 0.2; 0.2; 0.2];
 data.nSegment = 4; data.nCardinalCoor = 3;
 
 disp('Generating Model')
@@ -60,8 +60,8 @@ disp('Loading Kalman Filter')
 [model, data] = GenerateKalmanFilter(model,data);
 disp('Loading Real Data')
 [model, data] = GenerateRealData(model,data);
-% disp('Generating Simulation')
-% [model, data, simState, simStateMassGrad, simStateCoMGrad, simStateInertiaGrad] = GenerateSimulation_RK4(model,data);
+disp('Generating Simulation')
+[model, data, simStateMassGrad, simStateCoMGrad, simStateInertiaGrad] = GenerateSimulation_RK4(model,data);
 disp('Initialize Estimation')
 data = saveInitialValues(model, data);
 disp('Calculating Estimation')
@@ -144,18 +144,23 @@ disp('Calculating Simulation')
 disp('Calculating Momentum')
 data = CalculateMomentum(model, data);
 
-% x0 = zeros(model.nx,1);
-% u0 = zeros(model.nu,1);
-% x(model.nq+3) = 9.81/2;
-% x(model.nq+4) = -6;
+x0 = zeros(model.nx,1);
+u0 = zeros(model.nu,1);
+x(model.nq+3) = 9.81/2;
+x(model.nq+4) = -6;
 % simState = simState(x0,u0);
 
-% data.simStateMassGrad_init = simStateMassGrad(w0(end - N_extras + 1:end - N_extras + N_mass));
-% data.simStateMassGrad_opt = simStateMassGrad(w_opt(end - N_extras + 1:end - N_extras + N_mass));
-% data.simStateCoMGrad_init = simStateCoMGrad(w0(end - N_extras + N_mass + 1:end - N_I));
-% data.simStateCoMGrad_opt = simStateCoMGrad(w_opt(end - N_extras + N_mass + 1:end - N_I));
-% data.simStateInertiaGrad_init = simStateInertiaGrad(w0(end - N_I + 1:end));
-% data.simStateInertiaGrad_opt = simStateInertiaGrad(w_opt(end - N_I + 1:end));
+data.simStateMassGrad = {};
+data.simStateCoMGrad = {};
+data.simStateInertiaGrad = {};
+for l = 1:data.nSegment
+    data.simStateMassGrad = {data.simStateMassGrad{:}, ...
+            full(simStateMassGrad{l}(x0, u0, data.w0(end - N_extras + 1:end)))};
+    data.simStateCoMGrad = {data.simStateCoMGrad{:}, ...
+            full(simStateCoMGrad{l}(x0, u0, data.w0(end - N_extras + 1:end)))};
+    data.simStateInertiaGrad = {data.simStateInertiaGrad{:}, ...
+            full(simStateInertiaGrad{l}(x0, u0, data.w0(end - N_extras + 1:end)))};
+end
 
 data.objFunc_init = full(objFunc(data.w0));
 data.objFunc_opt = full(objFunc(data.w_opt));
