@@ -2,6 +2,7 @@ function [prob, lbw, ubw, lbg, ubg, ...
             objFunc, conFunc, objGrad, conGrad, ...
             stateMassGrad, stateCoMGrad, stateInertiaGrad] = ...
             GenerateEstimation_Q_multiple_shooting(model, data)
+%             controlMassGrad, controlCoMGrad, controlInertiaGrad] = ...
 %             JstateInertiaGrad, JcontrolInertiaGrad, JinertiaInertiaGrad] = ...
 import casadi.*
 
@@ -88,6 +89,7 @@ CoM = vertcat(CoM{:});
 I = vertcat(I{:});
 
 w_Xkend = {};
+% w_Uk = {};
 
 kalman_q = data.kalman_q;
 kalman_v = data.kalman_v;
@@ -124,6 +126,7 @@ for k=0:Nint-1
     Xkend = Xk;
     
     w_Xkend = {w_Xkend{:}, Xkend};
+%     w_Uk = {w_Uk{:}, Uk};
     
     Ju = Ju + fJu(Uk);
     
@@ -189,6 +192,7 @@ Jx = vertcat(Jx{:});
 w = vertcat(w{:});
 % inertia_var = vertcat(inertia_var{:});
 w_Xkend = vertcat(w_Xkend{:});
+% w_Uk = vertcat(w_Uk{:});
 g = vertcat(g{:});
 prob = struct('f', sum(Jx)+Ju+JI, 'x', w, 'g', g);
 
@@ -207,6 +211,10 @@ if nargout > 5
     stateCoMGrad = {};
     stateInertiaGrad = {};
     
+%     controlMassGrad = {};
+%     controlCoMGrad = {};
+%     controlInertiaGrad = {};
+    
 %     laststateInertiaGrad = Function('IdXkend', {inertia_var}, {jacobian(Xkend,inertia_var)});
     for l = 1:N_segment
         stateMassGrad = {stateMassGrad{:}, Function('IdXk_mass', {w}, ...
@@ -215,6 +223,13 @@ if nargout > 5
             {jacobian(w_Xkend,w(end - N_extras + N_mass + 3*l-2:end - N_extras + N_mass + 3*l))})};
         stateInertiaGrad = {stateInertiaGrad{:}, Function('IdXk_I', {w}, ...
             {jacobian(w_Xkend,w(end - N_I + 3*l-2:end - N_I + 3*l))})};
+        
+%         controlMassGrad = {controlMassGrad{:}, Function('IdUk_mass', {w}, ...
+%             {jacobian(w_Uk,w(end - N_extras + l))})};
+%         controlCoMGrad = {controlCoMGrad{:}, Function('IdUk_CoM', {w}, ...
+%             {jacobian(w_Uk,w(end - N_extras + N_mass + 3*l-2:end - N_extras + N_mass + 3*l))})};
+%         controlInertiaGrad = {controlInertiaGrad{:}, Function('IdUk_I', {w}, ...
+%             {jacobian(w_Uk,w(end - N_I + 3*l-2:end - N_I + 3*l))})};
     end
     
 %     stateMassGrad = vertcat(stateMassGrad{:});
