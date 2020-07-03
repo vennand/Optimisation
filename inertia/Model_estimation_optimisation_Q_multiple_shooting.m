@@ -7,7 +7,7 @@ import casadi.*
 
 data.nDoF = 42;
 
-data.Nint = 100;% number of control nodesl
+data.Nint = 50;% number of control nodesl
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
@@ -42,15 +42,15 @@ data.kalman_optimised_filename = ['../gravity/Solutions/Do_822_F' ...
                                     '_weightQV' num2str(1) '-' num2str(0.01) ...
                                     '_gravityRotationBound=' num2str(data.gravityRotationBound) ...
                                     '_IPOPTMA57_Q.mat'];
-                                
-pelvis = 6; thorax = 9; right_thigh = 33; left_thigh = 39;
 
-data.segments = [pelvis, thorax, right_thigh, left_thigh];
+data = InertiaIndex(data);
 
-data.massBound = [0; 2; 0; 0]; % kg
-data.CoMBound = [0; 0.1; 0; 0]; % m
-data.inertiaBound = [0; 0.2; 0; 0];
-data.nSegment = 4; data.nCardinalCoor = 3;
+data.segments = [data.left_arm, data.left_forearm];
+
+data.massBound = [1; 1]; % kg
+data.CoMBound = [0.1; 0.1]; % m
+data.inertiaBound = [0.2; 0.2];
+data.nSegment = length(data.segments); data.nCardinalCoor = 3;
 
 disp('Generating Model')
 [model, data] = GenerateModel(data);

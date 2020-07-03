@@ -23,12 +23,24 @@ disp('Generating Model')
 model.gravity = [1; 0.5; -sqrt(9.81^2 - 1^2 -0.5^2)];
 data.angle_gravity = acos(dot(model.gravity,[0;0;-9.81])/(norm(model.gravity)*norm([0;0;-9.81])))*180/pi;
 
-[mass_init, CoM_init, I_init] = mcI(model.I{9});
-rng(0,'twister');
-mass_sim = mass_init;% * (rand(1)/10+1);
-CoM_sim = CoM_init .* (rand(3,1)/10+1);
-I_sim = I_init .* (rand(3,3)/10+1);
-model.I{9} = mcI(mass_sim, CoM_sim, I_sim); %torse
+data = InertiaIndex(data);
+
+% all_segments = [data.pelvis, data.thorax, data.head, ...
+%                 data.right_arm, data.right_forearm, data.right_hand, ...
+%                 data.left_arm, data.left_forearm, data.left_hand, ...
+%                 data.right_thigh, data.right_leg, data.right_foot, ...
+%                 data.left_thigh, data.left_leg, data.left_foot];
+all_segments = [data.left_arm, data.left_forearm];
+data.sim_segments = all_segments;
+
+for i = 1:length(all_segments)
+    [mass_init, CoM_init, I_init] = mcI(model.I{all_segments(i)});
+    rng(0,'twister');
+    mass_sim = mass_init * (rand(1)/10+1);
+    CoM_sim = CoM_init .* (rand(3,1)/10+1);
+    I_sim = I_init .* (rand(3,3)/10+1);
+    model.I{all_segments(i)} = mcI(mass_sim, CoM_sim, I_sim); %torse
+end
 
 disp('Generating Simulation')
 [model, data] = GenerateSimulation_RK4(model,data);
@@ -36,9 +48,8 @@ disp('Generating Simulation')
 save(['Simulations/Do_822_simN' num2str(data.simNint) ...
       '_simV' num2str(data.simVariance) ...
       '_U' num2str(data.weightU) '_N' num2str(data.Nint) ...
-      '_G' strjoin(strsplit(num2str(model.gravity'), ' ', 'CollapseDelimiters', true),',') ...
-      '_CoM' strjoin(strsplit(num2str(CoM_sim'), ' ', 'CollapseDelimiters', true),',') ...
-      '_I' strjoin(strsplit(num2str(diag(I_sim)'), ' ', 'CollapseDelimiters', true),',') ...
+      '_G_' strjoin(strsplit(num2str(model.gravity'), ' ', 'CollapseDelimiters', true),',') ...
+      '_Segments_' strjoin(strsplit(num2str(all_segments), ' ', 'CollapseDelimiters', true),',') ...
       '.mat'],'model','data')
 
 q = data.xFull(1:model.nq,:);

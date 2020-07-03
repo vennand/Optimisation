@@ -34,6 +34,21 @@ data.weightQV = [1; 0.01];
 data.weightMass = 1;
 data.weightCoM = 1;
 data.weightI = 1;
+                                
+data = InertiaIndex(data);
+
+% all_segments = [data.pelvis, data.thorax, data.head, ...
+%                 data.right_arm, data.right_forearm, data.right_hand, ...
+%                 data.left_arm, data.left_forearm, data.left_hand, ...
+%                 data.right_thigh, data.right_leg, data.right_foot, ...
+%                 data.left_thigh, data.left_leg, data.left_foot];
+all_segments = [data.left_arm, data.left_forearm];
+data.segments = all_segments;
+
+data.nSegment = length(data.segments); data.nCardinalCoor = 3;
+data.massBound = ones(data.nSegment,1) * 1; % kg
+data.CoMBound = ones(data.nSegment,1) * 0.1; % m
+data.inertiaBound = ones(data.nSegment,1) * 0.2;
 
 data.gravityRotationBound = pi/16;
 data.kalman_optimised_filename = ['../gravity/Simulations/Do_822_F' ...
@@ -41,16 +56,8 @@ data.kalman_optimised_filename = ['../gravity/Simulations/Do_822_F' ...
                                     '_U' num2str(data.weightU) '_N' num2str(data.Nint) ...
                                     '_weightQV' num2str(1) '-' num2str(0.01) ...
                                     '_gravityRotationBound=' num2str(data.gravityRotationBound) ...
+                                    '_Segments_' strjoin(strsplit(num2str(all_segments), ' ', 'CollapseDelimiters', true),',') ...
                                     '_IPOPTMA57_Q.mat'];
-                                
-pelvis = 6; thorax = 9; right_thigh = 33; left_thigh = 39;
-
-data.segments = [pelvis, thorax, right_thigh, left_thigh];
-
-data.massBound = [0; 2; 0; 0]; % kg
-data.CoMBound = [0; 0.1; 0; 0]; % m
-data.inertiaBound = [0; 0.2; 0; 0];
-data.nSegment = 4; data.nCardinalCoor = 3;
 
 disp('Generating Model')
 [model, data] = GenerateModel(data);
@@ -64,9 +71,12 @@ sim_model = simulation.model;
 data.sim_data = sim_data;
 data.sim_model = sim_model;
 
-data.kalman_q = sim_data.q_opt;
-data.kalman_v = sim_data.v_opt;
-data.kalman_tau = sim_data.u_opt;
+% data.kalman_q = sim_data.q_opt;
+% data.kalman_v = sim_data.v_opt;
+% data.kalman_tau = sim_data.u_opt;
+data.kalman_q = sim_data.kalman_q;
+data.kalman_v = sim_data.kalman_v;
+data.kalman_tau = sim_data.kalman_tau;
 model.gravity = sim_data.G_opt;
 
 disp('Loading Real Data')
@@ -148,7 +158,7 @@ disp('Calculating Momentum')
 data = CalculateMomentum(model, data);
 
 stats = solver.stats;
-save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
+save(['Simulations/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
       '_U' num2str(data.weightU) '_N' num2str(data.Nint) ...
       '_weightQV' num2str(data.weightQV(1)) '-' num2str(data.weightQV(2)) ...
       '_bounds=' strjoin(strsplit(num2str(data.massBound'), ' ', 'CollapseDelimiters', true),',') ...
@@ -160,7 +170,36 @@ save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end))
 toc
 % showmotion(model, 0:data.Duration/data.Nint:data.Duration, q_opt(:,:))
 
-[mass_sim, CoM_sim, I_sim] = mcI(data.sim_data.sim_model.I{9});
-disp(I_opt)
+[~, ~, I_model_left_arm] = mcI(model.I{data.left_arm});
+[~, ~, I_model_left_forearm] = mcI(model.I{data.left_forearm});
+I_model = [diag(I_model_left_arm)'; diag(I_model_left_forearm)'];
+
+[~, ~, I_sim_left_arm] = mcI(data.sim_data.sim_model.I{data.left_arm});
+[~, ~, I_sim_left_forearm] = mcI(data.sim_data.sim_model.I{data.left_forearm});
+I_sim = [diag(I_sim_left_arm)'; diag(I_sim_left_forearm)'];
+
+disp('I_opt')
+disp(data.I_opt)
+disp('I_model')
+disp(I_model)
+disp('I_sim')
 disp(I_sim)
+disp('initialInertia')
 disp(data.initialInertia)
+
+% I_model_full = [];
+% for i = 1:length(all_segments)
+%     [~, ~, I_model_temp] = mcI(model.I{all_segments(i)});
+%     I_model_full = [I_model_full; diag(I_model_temp)'];
+% end
+% 
+% I_sim_full = [];
+% for i = 1:length(all_segments)
+%     [~, ~, I_sim_temp] = mcI(data.sim_data.sim_model.I{all_segments(i)});
+%     I_sim_full = [I_sim_full; diag(I_sim_temp)'];
+% end
+% 
+% disp('I_model_full')
+% disp(I_model_full)
+% disp('I_sim_full')
+% disp(I_sim_full)

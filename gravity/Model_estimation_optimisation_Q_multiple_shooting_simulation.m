@@ -41,7 +41,7 @@ disp('Generating Model')
 % [model, data] = GenerateKalmanFilter(model,data);
 
 % Load simulated data
-simulation = load('../simulation/Simulations/Do_822_simN200_simV0.001_U0.01_N50_G1,0.5,-9.7461_CoM0,0,0.17429_I0.39386,0.43611,0.18255.mat');
+simulation = load('../simulation/Simulations/Do_822_simN200_simV0.001_U0.01_N50_G_1,0.5,-9.7461_Segments_26,28.mat');
 sim_data = simulation.data;
 sim_model = simulation.model;
 data.sim_data = sim_data;
@@ -117,6 +117,7 @@ save(['Simulations/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end
       '_U' num2str(data.weightU) '_N' num2str(data.Nint) ...
       '_weightQV' num2str(data.weightQV(1)) '-' num2str(data.weightQV(2)) ...
       '_gravityRotationBound=' num2str(data.gravityRotationBound) ...
+      '_Segments_' strjoin(strsplit(num2str(sim_data.sim_segments), ' ', 'CollapseDelimiters', true),',') ...
       '_IPOPTMA57_Q.mat'],'model','data','stats')
 % GeneratePlots(model, data);
 % AnimatePlot(model, data, 'sol', 'kalman');

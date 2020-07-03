@@ -141,7 +141,8 @@ JI = fJI(mass - data.initialMass, ...
 Jx = vertcat(Jx{:});
 w = vertcat(w{:});
 g = vertcat(g{:});
-prob = struct('f', sum(Jx)+Ju+JI, 'x', w, 'g', g);
+% prob = struct('f', sum(Jx)+Ju+JI, 'x', w, 'g', g);
+prob = struct('f', sum(Jx)+Ju, 'x', w, 'g', g);
 
 if nargout > 5
     objFunc = Function('J',  {w}, {Jx, Ju, JI});
