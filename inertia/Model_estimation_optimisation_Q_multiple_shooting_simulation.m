@@ -65,7 +65,7 @@ disp('Generating Model')
 % [model, data] = GenerateKalmanFilter(model,data);
 
 % Load simulated data
-simulation = load('../gravity/Simulations/Do_822_F3100-3300_U1e-07_N50_weightQV1-0.01_gravityRotationBound=0.19635_IPOPTMA57_Q.mat');
+simulation = load(data.kalman_optimised_filename);
 sim_data = simulation.data;
 sim_model = simulation.model;
 data.sim_data = sim_data;
@@ -170,18 +170,28 @@ save(['Simulations/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end
 toc
 % showmotion(model, 0:data.Duration/data.Nint:data.Duration, q_opt(:,:))
 
-[~, ~, I_model_left_arm] = mcI(model.I{data.left_arm});
-[~, ~, I_model_left_forearm] = mcI(model.I{data.left_forearm});
-I_model = [diag(I_model_left_arm)'; diag(I_model_left_forearm)'];
-
-[~, ~, I_sim_left_arm] = mcI(data.sim_data.sim_model.I{data.left_arm});
-[~, ~, I_sim_left_forearm] = mcI(data.sim_data.sim_model.I{data.left_forearm});
+[mass_sim_left_arm, CoM_sim_left_arm, I_sim_left_arm] = mcI(data.sim_data.sim_model.I{data.left_arm});
+[mass_sim_left_forearm, CoM_sim_left_forearm, I_sim_left_forearm] = mcI(data.sim_data.sim_model.I{data.left_forearm});
+mass_sim = [mass_sim_left_arm; mass_sim_left_forearm];
+CoM_sim = [CoM_sim_left_arm'; CoM_sim_left_forearm'];
 I_sim = [diag(I_sim_left_arm)'; diag(I_sim_left_forearm)'];
+
+disp('mass_opt')
+disp(data.mass_opt)
+disp('mass_sim')
+disp(mass_sim)
+disp('initialMass')
+disp(data.initialMass)
+
+disp('CoM_opt')
+disp(data.CoM_opt)
+disp('CoM_sim')
+disp(CoM_sim)
+disp('initialCoM')
+disp(data.initialCoM)
 
 disp('I_opt')
 disp(data.I_opt)
-disp('I_model')
-disp(I_model)
 disp('I_sim')
 disp(I_sim)
 disp('initialInertia')

@@ -7,7 +7,7 @@ import casadi.*
 
 data.nDoF = 42;
 
-data.Nint = 50;% number of control nodesl
+data.Nint = 200;% number of control nodes
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
@@ -34,6 +34,7 @@ data = adjust_number_of_interval(data);
 data.weightU = 1e-7;
 data.weightX = 1;
 data.weightQV = [1; 0.01];
+data.weightPoints = 1;
 
 disp('Generating Model')
 [model, data] = GenerateModel(data);
@@ -42,7 +43,8 @@ disp('Loading Kalman Filter')
 disp('Loading Real Data')
 [model, data] = GenerateRealData(model,data);
 disp('Calculating Estimation')
-[prob, lbw, ubw, lbg, ubg, objFunc, conFunc, objGrad, conGrad] = GenerateEstimation_Q_multiple_shooting(model, data);
+% [prob, lbw, ubw, lbg, ubg, objFunc, conFunc, objGrad, conGrad] = GenerateEstimation_Q_multiple_shooting(model, data);
+[prob, lbw, ubw, lbg, ubg, objFunc, conFunc, objGrad, conGrad] = GenerateEstimation_Q_EndChainMarkers_multiple_shooting(model, data);
 
 % [lbw, ubw] = GenerateInitialConstraints(model, data, lbw, ubw);
 % [lbw, ubw] = GenerateFinalConstraints(model, data, lbw, ubw);
@@ -105,8 +107,16 @@ save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end))
       '_U' num2str(data.weightU) '_N' num2str(data.Nint) ...
       '_weightQV' num2str(data.weightQV(1)) '-' num2str(data.weightQV(2)) ...
       '_gravityRotationBound=' num2str(data.gravityRotationBound) ...
-      '_IPOPTMA57_Q.mat'],'model','data','stats')
+      '_IPOPTMA57_Q_EndChainMarkers.mat'],'model','data','stats')
 % GeneratePlots(model, data);
 % AnimatePlot(model, data, 'sol', 'kalman');
+
+angle_deviation = 2 * atan(norm(data.G_opt*norm(data.gravity) - norm(data.G_opt)*data.gravity) / ...
+    norm(data.G_opt * norm(data.gravity) + norm(data.G_opt) * data.gravity))*180/pi;
+data.angle_deviation = angle_deviation;
+
+disp('Angle de déviation de la gravité')
+disp([num2str(data.angle_deviation) ' degrés'])
+
 toc
 % showmotion(model, 0:data.Duration/data.Nint:data.Duration, q_opt(:,:))

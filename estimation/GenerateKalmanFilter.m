@@ -31,10 +31,9 @@ new_a = a(:, 1:data.step:end);
 new_tau = tau(:, 1:data.step:end);
 
 if data.optimisedKalman
-    optimisedKalman_filename = ['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
+    optimisedKalman_filename = ['../gravity/Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end)) ...
                                 '_U' num2str(data.weightU) '_N' num2str(data.Nint) ...
                                 '_weightQV' num2str(1) '-' num2str(0.01) ...
-                                '_optimiseGravity=' num2str(data.optimisedKalmanGravity) ...
                                 '_gravityRotationBound=' num2str(data.gravityRotationBound) ...
                                 '_IPOPTMA57_Q.mat'];
     data.kalman_optimised_filename = optimisedKalman_filename;
@@ -56,7 +55,9 @@ if data.optimisedKalman
     data.kalman_tauUnoptimised = new_tau(7:end,1:end-1);
     
     if data.optimisedKalmanGravity
+        data.initialGravity = data.gravity ;
         data.gravity = data_kalman.G_opt;
+%         model.gravity = data.gravity;
     end
 else
     data.kalman_q = new_q;

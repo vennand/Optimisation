@@ -112,6 +112,10 @@ g = {g{:}, mass'*mass - data.initialMass(:)'*data.initialMass(:)};
 lbg = [lbg; -0.1];
 ubg = [ubg;  0.1];
 
+g = {g{:}, mass};
+lbg = [lbg; zeros(N_segment,1)];
+ubg = [ubg;  10*ones(N_segment,1)];
+
 CoM_lower_bounds = zeros(N_segment,N_cardinal_coor);
 CoM_upper_bounds = zeros(N_segment,N_cardinal_coor);
 for i = 1:N_cardinal_coor
@@ -122,6 +126,10 @@ end
 w = {w{:}, reshape(CoM',N_segment*N_cardinal_coor,1)};
 lbw = [lbw; reshape(CoM_lower_bounds',N_segment*N_cardinal_coor,1)];
 ubw = [ubw; reshape(CoM_upper_bounds',N_segment*N_cardinal_coor,1)];
+
+% g = {g{:}, reshape(CoM(:,1:2)',N_segment*(N_cardinal_coor-1),1)};
+% lbg = [lbg; zeros(N_segment*(N_cardinal_coor-1),1)];
+% ubg = [ubg;  zeros(N_segment*(N_cardinal_coor-1),1)];
 
 I_lower_bounds = zeros(N_segment,N_cardinal_coor);
 I_upper_bounds = zeros(N_segment,N_cardinal_coor);
@@ -134,6 +142,10 @@ w = {w{:}, reshape(I',N_segment*N_cardinal_coor,1)};
 lbw = [lbw; reshape(I_lower_bounds',N_segment*N_cardinal_coor,1)];
 ubw = [ubw; reshape(I_upper_bounds',N_segment*N_cardinal_coor,1)];
 
+g = {g{:}, reshape(I',N_segment*N_cardinal_coor,1)};
+lbg = [lbg; zeros(N_segment*N_cardinal_coor,1)];
+ubg = [ubg;  ones(N_segment*N_cardinal_coor,1)];
+
 JI = fJI(mass - data.initialMass, ...
          CoM - data.initialCoM, ...
          I - data.initialInertia);
@@ -143,6 +155,7 @@ w = vertcat(w{:});
 g = vertcat(g{:});
 % prob = struct('f', sum(Jx)+Ju+JI, 'x', w, 'g', g);
 prob = struct('f', sum(Jx)+Ju, 'x', w, 'g', g);
+% prob = struct('f', sum(Jx), 'x', w, 'g', g);
 
 if nargout > 5
     objFunc = Function('J',  {w}, {Jx, Ju, JI});

@@ -34,6 +34,21 @@ data.weightQV = [1; 0.01];
 data.weightMass = 1;
 data.weightCoM = 1;
 data.weightI = 1;
+                                
+data = InertiaIndex(data);
+
+% all_segments = [data.pelvis, data.thorax, data.head, ...
+%                 data.right_arm, data.right_forearm, data.right_hand, ...
+%                 data.left_arm, data.left_forearm, data.left_hand, ...
+%                 data.right_thigh, data.right_leg, data.right_foot, ...
+%                 data.left_thigh, data.left_leg, data.left_foot];
+all_segments = [data.left_arm, data.left_forearm];
+data.segments = all_segments;
+
+data.nSegment = length(data.segments); data.nCardinalCoor = 3;
+data.massBound = ones(data.nSegment,1) * 1; % kg
+data.CoMBound = ones(data.nSegment,1) * 0.1; % m
+data.inertiaBound = ones(data.nSegment,1) * 0.2;
 
 data.gravityRotationBound = pi/16;
 data.kalman_optimised_filename = ['../gravity/Solutions/Do_822_F' ...
@@ -42,15 +57,6 @@ data.kalman_optimised_filename = ['../gravity/Solutions/Do_822_F' ...
                                     '_weightQV' num2str(1) '-' num2str(0.01) ...
                                     '_gravityRotationBound=' num2str(data.gravityRotationBound) ...
                                     '_IPOPTMA57_Q.mat'];
-
-data = InertiaIndex(data);
-
-data.segments = [data.left_arm, data.left_forearm];
-
-data.massBound = [1; 1]; % kg
-data.CoMBound = [0.1; 0.1]; % m
-data.inertiaBound = [0.2; 0.2];
-data.nSegment = length(data.segments); data.nCardinalCoor = 3;
 
 disp('Generating Model')
 [model, data] = GenerateModel(data);
@@ -129,8 +135,8 @@ for i=1:length(data.segments)
     model.I{data.segments(i)} = mcI(data.mass_opt(i),data.CoM_opt(i,:), diag(data.I_opt(i,:)));
 end
 
-disp('Calculating Simulation')
-[model, data] = GenerateSimulation(model, data);
+% disp('Calculating Simulation')
+% [model, data] = GenerateSimulation(model, data);
 disp('Calculating Momentum')
 data = CalculateMomentum(model, data);
 
@@ -144,5 +150,21 @@ save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end))
       '_IPOPTMA57_Q.mat'],'model','data','stats')
 % GeneratePlots(model, data);
 % AnimatePlot(model, data, 'sol', 'kalman');
+
+disp('mass_opt')
+disp(data.mass_opt)
+disp('initialMass')
+disp(data.initialMass)
+
+disp('CoM_opt')
+disp(data.CoM_opt)
+disp('initialCoM')
+disp(data.initialCoM)
+
+disp('I_opt')
+disp(data.I_opt)
+disp('initialInertia')
+disp(data.initialInertia)
+
 toc
 % showmotion(model, 0:data.Duration/data.Nint:data.Duration, q_opt(:,:))

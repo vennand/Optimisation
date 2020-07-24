@@ -66,7 +66,7 @@ switch cloud2
         for i=1:data.Nint+1
             kalman_markers(:,:,i) = base_referential_coor(model, kalman_q(:,i));
         end
-        markers_cloud1 = kalman_markers;
+        markers_cloud2 = kalman_markers;
         disp(['Kalman unoptimised cloud' blanks(4) 'o'])
     case 'mocap'
         markers_cloud2 = data.markers;
@@ -114,4 +114,5 @@ for i=1:data.Nint+1
     end
     hold off
 end
+
 end
