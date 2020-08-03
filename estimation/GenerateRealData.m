@@ -14,7 +14,7 @@ labels_name = real_data.parameters.POINT.LABELS.DATA(labels);
 [~, order] = ismember(model.markers.name, labels_name);
 
 %Reorder the labels according to the model and to number of selected nodes
-markers_reformat = [markers(:, order, 1:data.step:end); ones(1,lenght(labels),length(frames))];
+markers_reformat = [markers(:, order, 1:data.step:end); ones(1,length(labels),data.Nint+1)];
 
 %Reposition the referential to the model
 RotoTrans_opt = find_optimal_RT(model,data);

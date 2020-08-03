@@ -7,7 +7,7 @@ import casadi.*
 
 data.nDoF = 42;
 
-data.Nint = 200;% number of control nodes
+data.Nint = 50;% number of control nodes
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
@@ -50,18 +50,18 @@ disp('Calculating Estimation')
 % [lbw, ubw] = GenerateFinalConstraints(model, data, lbw, ubw);
 
 options = struct;
-options.ipopt.max_iter = 3000;
-options.ipopt.print_level = 5;
-options.ipopt.linear_solver = 'ma57';
+% options.ipopt.max_iter = 3000;
+% options.ipopt.print_level = 5;
+% options.ipopt.linear_solver = 'ma57';
 
-options.ipopt.tol = 1e-6; % default: 1e-08
+% options.ipopt.tol = 1e-6; % default: 1e-08
 % options.ipopt.acceptable_tol = 1e-4; % default: 1e-06
-options.ipopt.constr_viol_tol = 0.001; % default: 0.0001
+% options.ipopt.constr_viol_tol = 0.001; % default: 0.0001
 % options.ipopt.acceptable_constr_viol_tol = 0.1; % default: 0.01
 
 disp('Generating Solver')
-% solver = nlpsol('solver', 'snopt', prob, options); % FAIRE MARCHER ÇA
-solver = nlpsol('solver', 'ipopt', prob, options);
+solver = nlpsol('solver', 'snopt', prob, options); % FAIRE MARCHER ÇA
+% solver = nlpsol('solver', 'ipopt', prob, options);
 
 w0=[];
 for k=1:data.Nint
@@ -107,7 +107,7 @@ save(['Solutions/Do_822_F' num2str(data.frames(1)) '-' num2str(data.frames(end))
       '_U' num2str(data.weightU) '_N' num2str(data.Nint) ...
       '_weightQV' num2str(data.weightQV(1)) '-' num2str(data.weightQV(2)) ...
       '_gravityRotationBound=' num2str(data.gravityRotationBound) ...
-      '_IPOPTMA57_Q_EndChainMarkers.mat'],'model','data','stats')
+      '_IPOPTMA57_Q_EndChainMarkers_SNOPT.mat'],'model','data','stats')
 % GeneratePlots(model, data);
 % AnimatePlot(model, data, 'sol', 'kalman');
 

@@ -1,13 +1,13 @@
 function RotoTrans_opt = find_optimal_RT(model,data)
 import casadi.*
-
+tic
 [~, N_markers] = size(model.markers.coordinates);
+
+real_data = ezc3dRead(data.dataFile);
 
 labels = data.labels;
 labels_name = real_data.parameters.POINT.LABELS.DATA(labels);
 [~, order] = ismember(model.markers.name, labels_name);
-
-real_data = ezc3dRead(data.dataFile);
 
 markers = real_data.data.points(:,labels,1)/1000; %meter
 markers = [markers(:, order, :); ones(1,95)];
@@ -119,7 +119,7 @@ angleY_opt = w_opt(5);
 angleZ_opt = w_opt(6);
 
 RotoTrans_opt = RotoTrans(transX_opt, transY_opt, transZ_opt, angleX_opt, angleY_opt, angleZ_opt);
-
+toc
 % Plot
 % markers_opt = RotoTrans_opt*markers;
 % markers_old = refential_matrix()'*markers(1:3,:);
