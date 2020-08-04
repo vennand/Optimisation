@@ -8,6 +8,7 @@ import casadi.*
 data.nDoF = 42;
 
 data.Nint = 50;% number of control nodes
+data.subject = 'DoCi';
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 

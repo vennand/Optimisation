@@ -8,10 +8,14 @@ import casadi.*
 data.nDoF = 42;
 
 data.Nint = 50;% number of control nodes
+data.subject = 'DoCi';
 data.odeMethod = 'rk4';
 data.NLPMethod = 'MultipleShooting';
 
-data.gravity = [0; 0; -9.81];
+% WolframAlpha.com Local Acceleration of Gravity widget
+% Based on EGM2008 12th order model;, 47 meters above sea level
+% Montreal, Quebec, Canada
+data.gravity = [0; 0; -9.80639];
 data.gravityRotationBound = pi/16;
 data.nCardinalCoor = 3;
 
@@ -50,18 +54,18 @@ disp('Calculating Estimation')
 % [lbw, ubw] = GenerateFinalConstraints(model, data, lbw, ubw);
 
 options = struct;
-% options.ipopt.max_iter = 3000;
-% options.ipopt.print_level = 5;
-% options.ipopt.linear_solver = 'ma57';
+options.ipopt.max_iter = 3000;
+options.ipopt.print_level = 5;
+options.ipopt.linear_solver = 'ma57';
 
-% options.ipopt.tol = 1e-6; % default: 1e-08
+options.ipopt.tol = 1e-6; % default: 1e-08
 % options.ipopt.acceptable_tol = 1e-4; % default: 1e-06
-% options.ipopt.constr_viol_tol = 0.001; % default: 0.0001
+options.ipopt.constr_viol_tol = 0.001; % default: 0.0001
 % options.ipopt.acceptable_constr_viol_tol = 0.1; % default: 0.01
 
 disp('Generating Solver')
-solver = nlpsol('solver', 'snopt', prob, options); % FAIRE MARCHER ÇA
-% solver = nlpsol('solver', 'ipopt', prob, options);
+% solver = nlpsol('solver', 'snopt', prob, options); % FAIRE MARCHER ÇA
+solver = nlpsol('solver', 'ipopt', prob, options);
 
 w0=[];
 for k=1:data.Nint

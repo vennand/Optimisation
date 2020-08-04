@@ -1,10 +1,20 @@
 % Calcule la matrice Rototrans passant des angles de cardans du bassin à [1000;0100;0010;0001]
 % Pour Do_822_contact_2_MOD200.00_GenderF_DoCig
-function [Roto] = refential_matrix()
+function [Roto] = refential_matrix(data)
+subject = data.subject;
 
-angleX = 0.0480;
-angleY = -0.0657;
-angleZ = 1.5720;
+switch subject
+    case 'DoCi'
+        angleX = 0.0480;
+        angleY = -0.0657;
+        angleZ = 1.5720;
+    case 'JeCh'
+        angleX = 0.0102;
+        angleY = 0.1869;
+        angleZ = -1.6201;
+    otherwise
+        error([subject ' is not a valid subject' newline 'Choices are DoCi or JeCh'])
+end
 
 RotX = [1, 0, 0;...
         0, cos(angleX), -sin(angleX);...
