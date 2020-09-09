@@ -99,20 +99,20 @@ set(groot,'defaultAxesColorOrder', colors);
 % plot(htot_kalman_full(1:3,:)')
 % figure()
 % plot(htot(1:3,:)')
-figure()
+figure(1)
 hold on
 plot(htot_estim(1:3,:)','-')
 plot(htot_kalman(1:3,:)','.-')
-figure()
+figure(2)
 hold on
 plot(htot_estim(4:6,:)','-')
 plot(htot_kalman(4:6,:)','.-')
 
-figure()
+figure(3)
 hold on
 plot(htot_estim_slope(1:3,:)','-')
 plot(htot_kalman_slope(1:3,:)','.-')
-figure()
+figure(4)
 hold on
 plot(htot_estim_slope(4:6,:)','-')
 plot(htot_kalman_slope(4:6,:)','.-')

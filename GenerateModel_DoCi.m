@@ -1,4 +1,4 @@
-function [model, data] = GenerateModel(data)
+function [model, data] = GenerateModel_DoCi(data)
 % version 1
 
 % File extracted from DoCi.s2mMod

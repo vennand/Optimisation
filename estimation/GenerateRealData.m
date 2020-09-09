@@ -14,16 +14,17 @@ labels_name = real_data.parameters.POINT.LABELS.DATA(labels);
 [~, order] = ismember(model.markers.name, labels_name);
 
 %Reorder the labels according to the model and to number of selected nodes
-markers_reformat = [markers(:, order, 1:data.step:end); ones(1,length(labels),data.Nint+1)];
+markers_reformat = markers(:, order, 1:data.step:end);
+% markers_reformat = [markers(:, order, 1:data.step:end); ones(1,length(labels),data.Nint+1)];
 
 %Reposition the referential to the model
-RotoTrans_opt = find_optimal_RT(model,data);
-ref_rotation = refential_matrix()';
+% RotoTrans_opt = find_optimal_RT(model,data);
+ref_rotation = refential_matrix(data)';
 gravity_rotation = vrrotvec2mat(vrrotvec(data.initialGravity, data.gravity));
 for k=1:size(markers_reformat,3)
 %     markers_reformat(:,:,k) = gravity_rotation * ref_rotation * markers_reformat(:,:,k);
-%     markers_reformat(:,:,k) = ref_rotation * markers_reformat(:,:,k);
-    markers_reformat(:,:,k) = RotoTrans_opt * markers_reformat(:,:,k);
+    markers_reformat(:,:,k) = ref_rotation * markers_reformat(:,:,k);
+%     markers_reformat(:,:,k) = RotoTrans_opt * markers_reformat(:,:,k);
 end
 
 % Storing data

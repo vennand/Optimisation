@@ -79,6 +79,7 @@ switch cloud2
         disp('Options are: sol, kalman, kalmanUnopti, mocap, sim')
 end
 
+figure(20)
 for i=1:data.Nint+1
     disp(['Node: ' num2str(i)])
     scatter3(markers_cloud1(1,:,i),markers_cloud1(2,:,i),markers_cloud1(3,:,i),'o')

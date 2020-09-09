@@ -17,7 +17,7 @@ labels_name = real_data.parameters.POINT.LABELS.DATA(labels);
 markers_reformat = markers(:, order, 1:data.step:end);
 
 %Reposition the referential to the model
-ref_rotation = refential_matrix()';
+ref_rotation = refential_matrix(data)';
 for k=1:size(markers_reformat,3)
     markers_reformat(:,:,k) = ref_rotation * markers_reformat(:,:,k);
 end

@@ -57,7 +57,7 @@ if data.optimisedKalman
     if data.optimisedKalmanGravity
         data.initialGravity = data.gravity ;
         data.gravity = data_kalman.G_opt;
-%         model.gravity = data.gravity;
+        model.gravity = data.gravity;
     end
 else
     data.kalman_q = new_q;

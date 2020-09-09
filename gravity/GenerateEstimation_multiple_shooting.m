@@ -116,9 +116,6 @@ if data.optimiseGravity
     lbg = [lbg; -1e-12];
     ubg = [ubg;  1e-12];
 end
-if data.optimiseInertia
-    bounds = data.inertiaTorsoRelativeBound;
-end
 
 Jmarkers = vertcat(Jmarkers{:});
 w = vertcat(w{:});
